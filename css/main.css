@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Brutalist Design Base Styles */
+:root {
+  --color-cream: #FFFBEB;
+  --shadow-brutal-sm: 3px 3px 0 #000;
+  --shadow-brutal: 4px 4px 0 #000;
+  --shadow-brutal-md: 6px 6px 0 #000;
+  --shadow-brutal-lg: 8px 8px 0 #000;
+}
+
+/* Base typography */
+html {
+  overflow-y: scroll;
+}
+
+/* Accessibility: Skip link */
+.skip-link {
+  @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50;
+  @apply bg-cream text-black px-4 py-2 border-2 border-black shadow-brutal;
+}
+
+/* Utility classes for brutalist design */
+.brutal-border {
+  @apply border-2 border-black;
+}
+
+.brutal-shadow {
+  @apply shadow-brutal;
+}
+
+.brutal-shadow-hover {
+  @apply transition-shadow hover:shadow-brutal-md;
+}
+
+/* Accessibility: Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

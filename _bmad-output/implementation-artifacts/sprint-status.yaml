@@ -1,0 +1,132 @@
+# generated: 2026-01-29
+# project: jaysinghdev
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-01-29
+project: jaysinghdev
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+# QUALITY & TESTING INFRASTRUCTURE
+# =================================
+# Tracks test framework setup and quality tooling
+# Managed by TEA (Test Architect) workflows
+
+quality_testing:
+  test-framework:
+    status: done
+    framework: playwright
+    completed: 2026-01-29
+    artifacts:
+      - playwright.config.ts
+      - tests/e2e/*.spec.ts
+      - tests/support/fixtures/index.ts
+      - tests/support/helpers/*.ts
+      - tests/README.md
+    coverage:
+      - accessibility (axe-core WCAG 2.1 AA)
+      - seo (meta, og, twitter, json-ld)
+      - navigation (keyboard, landmarks, headings)
+      - content (blog, projects, homepage)
+    notes: "Configured for 11ty static site. Tests ready to run once Epic 1 delivers npm run serve."
+
+  ci-pipeline:
+    status: backlog
+    notes: "Run [CI] workflow after Epic 1 to automate test execution"
+
+  lighthouse-ci:
+    status: backlog
+    notes: "100% Lighthouse scores required per PRD"
+
+development_status:
+  # Epic 1: Project Foundation
+  epic-1: in-progress
+  1-1-initialize-project-from-eleventy-base-blog-starter: done
+  1-2-add-tailwind-css-with-brutalist-design-tokens: backlog
+  1-3-create-base-layout-with-accessibility-landmarks: backlog
+  1-4-configure-github-actions-deployment: backlog
+  epic-1-retrospective: optional
+
+  # Epic 2: Site Shell & Navigation
+  epic-2: backlog
+  2-1-create-header-with-navigation: backlog
+  2-2-create-footer: backlog
+  2-3-create-home-page: backlog
+  2-4-create-about-profile-page: backlog
+  2-5-create-contact-page: backlog
+  2-6-create-404-error-page: backlog
+  epic-2-retrospective: optional
+
+  # Epic 3: Blog System
+  epic-3: backlog
+  3-1-create-blog-listing-page: backlog
+  3-2-create-blog-post-detail-page: backlog
+  3-3-add-code-syntax-highlighting: backlog
+  3-4-add-code-copy-buttons: backlog
+  3-5-add-mermaid-diagram-rendering: backlog
+  3-6-add-related-projects-to-blog-posts: backlog
+  3-7-migrate-existing-blog-posts: backlog
+  epic-3-retrospective: optional
+
+  # Epic 4: Projects Portfolio
+  epic-4: backlog
+  4-1-create-projects-listing-page: backlog
+  4-2-create-project-detail-page: backlog
+  4-3-migrate-existing-projects: backlog
+  epic-4-retrospective: optional
+
+  # Epic 5: Resume & Professional Profile
+  epic-5: backlog
+  5-1-create-resume-page: backlog
+  5-2-migrate-resume-and-skills-data: backlog
+  epic-5-retrospective: optional
+
+  # Epic 6: SEO & Discoverability
+  epic-6: backlog
+  6-1-add-meta-tags-to-all-pages: backlog
+  6-2-add-open-graph-tags: backlog
+  6-3-add-twitter-card-tags: backlog
+  6-4-add-json-ld-structured-data: backlog
+  6-5-add-sitemap-and-robots-txt: backlog
+  6-6-configure-clean-urls: backlog
+  epic-6-retrospective: optional
+
+  # Epic 7: Accessibility Verification & Template Documentation
+  epic-7: backlog
+  7-1-verify-accessibility-compliance: backlog
+  7-2-implement-reduced-motion-support: backlog
+  7-3-verify-color-contrast: backlog
+  7-4-verify-alt-text-on-images: backlog
+  7-5-create-readme-documentation: backlog
+  7-6-document-configuration-and-content-authoring: backlog
+  epic-7-retrospective: optional
