@@ -61,8 +61,17 @@ quality_testing:
     notes: "Configured for 11ty static site. Tests ready to run once Epic 1 delivers npm run serve."
 
   ci-pipeline:
-    status: backlog
-    notes: "Run [CI] workflow after Epic 1 to automate test execution"
+    status: done
+    completed: 2026-01-29
+    artifacts:
+      - .github/workflows/test.yml
+    features:
+      - parallel sharding (2 jobs)
+      - playwright browser caching
+      - burn-in loop (10 iterations for PRs to main)
+      - failure-only artifact upload
+      - test summary report
+    notes: "CI pipeline configured. Triggers on push/PR to main and staging branches."
 
   lighthouse-ci:
     status: backlog
