@@ -27,9 +27,9 @@ test.describe('GitHub Actions Deployment Configuration (Story 1.4)', () => {
       expect(content).toContain('- main');
     });
 
-    test('workflow uses Node.js 20', () => {
+    test('workflow uses Node.js version from .nvmrc', () => {
       const content = fs.readFileSync(workflowPath, 'utf-8');
-      expect(content).toContain('node-version: 20');
+      expect(content).toContain("node-version-file: '.nvmrc'");
     });
 
     test('workflow uses npm cache', () => {
