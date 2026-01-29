@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>EVENT-DRIVEN MICROSERVICES ARCHITECTURE</title>
+		<meta name="description" content="Architected event-driven microservices platform using Domain-Driven Design principles, FastAPI async framework, SQLAlchemy 2.0 ORM, and clean architecture patterns with bounded context isolation. Features real-time event sourcing, domain event processing, scan analytics, and student data integration workflows. Maintains 99.9% uptime supporting academic operations with fault-tolerant circuit breaker patterns and async/await architecture supporting 500+ concurrent users.">
+		<link rel="alternate" href="/feed/feed.xml" type="application/atom+xml" title="Jay Singh">
+		
+		
+		<link rel="stylesheet" href="/css/main.css">
+		
+		<style>/* This is an arbitrary CSS string added to the bundle */
+/* Defaults */
+:root {
+	--font-family: -apple-system, system-ui, sans-serif;
+	--font-family-monospace: Consolas, Menlo, Monaco, Andale Mono WT, Andale Mono, Lucida Console, Lucida Sans Typewriter, DejaVu Sans Mono, Bitstream Vera Sans Mono, Liberation Mono, Nimbus Mono L, Courier New, Courier, monospace;
+}
+
+/* Theme colors */
+:root {
+	--color-gray-20: #e0e0e0;
+	--color-gray-50: #C0C0C0;
+	--color-gray-90: #333;
+
+	--background-color: #fff;
+
+	--text-color: var(--color-gray-90);
+	--text-color-link: #082840;
+	--text-color-link-active: #5f2b48;
+	--text-color-link-visited: #17050F;
+
+	--syntax-tab-size: 2;
+}
+
+/* Dark mode removed - brutalist design uses cream-based light theme only */
+
+/* Global stylesheet */
+* {
+	box-sizing: border-box;
+}
+
+@view-transition {
+	navigation: auto;
+}
+
+html,
+body {
+	padding: 0;
+	margin: 0 auto;
+	font-family: var(--font-family);
+	color: var(--text-color);
+	background-color: var(--background-color);
+}
+html {
+	overflow-y: scroll;
+}
+body {
+	max-width: 40em;
+}
+
+/* https://www.a11yproject.com/posts/how-to-hide-content/ */
+.visually-hidden:not(:focus):not(:active) {
+	clip: rect(0 0 0 0);
+	clip-path: inset(50%);
+	height: 1px;
+	overflow: hidden;
+	position: absolute;
+	white-space: nowrap;
+	width: 1px;
+}
+
+/* Fluid images via https://www.zachleat.com/web/fluid-images/ */
+img{
+  max-width: 100%;
+}
+img[width][height] {
+  height: auto;
+}
+img[src$=".svg"] {
+  width: 100%;
+  height: auto;
+  max-width: none;
+}
+video,
+iframe {
+	width: 100%;
+	height: auto;
+}
+iframe {
+	aspect-ratio: 16/9;
+}
+
+p:last-child {
+	margin-bottom: 0;
+}
+p {
+	line-height: 1.5;
+}
+
+li {
+	line-height: 1.5;
+}
+
+a[href] {
+	color: var(--text-color-link);
+}
+a[href]:visited {
+	color: var(--text-color-link-visited);
+}
+a[href]:hover,
+a[href]:active {
+	color: var(--text-color-link-active);
+}
+
+main,
+footer {
+	padding: 1rem;
+}
+main :first-child {
+	margin-top: 0;
+}
+
+header {
+	border-bottom: 1px dashed var(--color-gray-20);
+}
+
+/* Skip link styling moved to main.css using Tailwind utilities (.skip-link class) */
+
+.links-nextprev {
+	display: flex;
+	justify-content: space-between;
+	gap: .5em 1em;
+	list-style: "";
+	border-top: 1px dashed var(--color-gray-20);
+	padding: 1em 0;
+}
+.links-nextprev > * {
+	flex-grow: 1;
+}
+.links-nextprev-next {
+	text-align: right;
+}
+
+table {
+	margin: 1em 0;
+}
+table td,
+table th {
+	padding-right: 1em;
+}
+
+pre,
+code {
+	font-family: var(--font-family-monospace);
+}
+pre:not([class*="language-"]) {
+	margin: .5em 0;
+	line-height: 1.375; /* 22px /16 */
+	-moz-tab-size: var(--syntax-tab-size);
+	-o-tab-size: var(--syntax-tab-size);
+	tab-size: var(--syntax-tab-size);
+	-webkit-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+	direction: ltr;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	overflow-x: auto;
+}
+code {
+	word-break: break-all;
+}
+
+/* Header */
+header {
+	display: flex;
+	gap: 1em;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: center;
+	padding: 1em;
+}
+.home-link {
+	flex-grow: 1;
+	font-size: 1em; /* 16px /16 */
+	font-weight: 700;
+}
+.home-link:link:not(:hover) {
+	text-decoration: none;
+}
+
+/* Nav */
+.nav {
+	display: flex;
+	gap: .5em 1em;
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+.nav-item {
+	display: inline-block;
+}
+.nav-item a[href]:not(:hover) {
+	text-decoration: none;
+}
+.nav a[href][aria-current="page"] {
+	text-decoration: underline;
+}
+
+/* Posts list */
+.postlist {
+	counter-reset: start-from var(--postlist-index);
+	list-style: none;
+	padding: 0;
+	padding-left: 1.5rem;
+}
+.postlist-item {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	counter-increment: start-from -1;
+	margin-bottom: 1em;
+}
+.postlist-item:before {
+	display: inline-block;
+	pointer-events: none;
+	content: "" counter(start-from, decimal-leading-zero) ". ";
+	line-height: 100%;
+	text-align: right;
+	margin-left: -1.5rem;
+}
+.postlist-date,
+.postlist-item:before {
+	font-size: 0.8125em; /* 13px /16 */
+	color: var(--color-gray-90);
+}
+.postlist-date {
+	word-spacing: -0.5px;
+}
+.postlist-link {
+	font-size: 1.1875em; /* 19px /16 */
+	font-weight: 700;
+	flex-basis: calc(100% - 1.5rem);
+	padding-left: .25em;
+	padding-right: .5em;
+	text-underline-position: from-font;
+	text-underline-offset: 0;
+	text-decoration-thickness: 1px;
+}
+.postlist-item-active .postlist-link {
+	font-weight: bold;
+}
+
+/* Tags */
+.post-tag {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	text-transform: capitalize;
+	font-style: italic;
+}
+.postlist-item > .post-tag {
+	align-self: center;
+}
+
+/* Tags list */
+.post-metadata {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: .5em;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+.post-metadata time {
+	margin-right: 1em;
+}</style>
+		
+	</head>
+	<body>
+		<a href="#main-content" id="skip-link" class="skip-link">Skip to main content</a>
+
+		<header role="banner">
+			<a href="/" class="home-link">Jay Singh</a>
+			<nav aria-label="Main navigation">
+				<h2 class="visually-hidden" id="top-level-navigation-menu">Top level navigation menu</h2>
+				<ul class="nav">
+					<li class="nav-item"><a href="/">Home</a></li>
+					<li class="nav-item"><a href="/feed/feed.xml">Feed</a></li>
+				</ul>
+			</nav>
+		</header>
+
+		<main id="main-content" tabindex="-1">
+			<heading-anchors>
+				<h1 id="event-driven-microservices-architecture">EVENT-DRIVEN MICROSERVICES ARCHITECTURE</h1>
+<p>An enterprise-scale event-driven microservices platform built using Domain-Driven Design principles to support critical university operations. The architecture leverages bounded contexts to isolate business domains, enabling independent development and deployment of services. Built with FastAPI for high-performance async processing and SQLAlchemy 2.0 for robust data management, the system handles complex workflows including scan analytics, student data integration, and real-time event processing. The platform implements clean architecture patterns ensuring testability, maintainability, and clear separation of concerns across all services.</p>
+<h2 id="challenge">Challenge</h2>
+<p>The existing monolithic system created tight coupling between business domains, making changes risky and deployments disruptive. As the university's digital operations grew, the monolith became a bottleneck for development velocity and system reliability. Different teams working on unrelated features would block each other during deployments. The system struggled to handle peak loads during registration periods and campus events. There was a critical need to modernize the architecture to support 500+ concurrent users while enabling independent team velocity and maintaining the 99.9% uptime required for academic operations.</p>
+<h2 id="solution">Solution</h2>
+<p>Redesigned the system using event-driven microservices architecture with clear bounded contexts aligned to business domains. Implemented FastAPI for high-performance async request handling and SQLAlchemy 2.0 for database operations with async support. Applied Domain-Driven Design principles to identify aggregates, entities, and value objects within each bounded context. Built event sourcing infrastructure for audit trails and temporal queries. Implemented circuit breaker patterns for fault tolerance and graceful degradation. Created domain event processing pipelines enabling loose coupling between services. Deployed on Docker with container orchestration for easy scaling and management.</p>
+<h2 id="impact">Impact</h2>
+<p>Achieved 99.9% uptime supporting critical academic operations with zero downtime deployments. Successfully handled 500+ concurrent users during peak registration periods with sub-second response times. Reduced deployment risk by enabling independent service releases without system-wide downtime. Improved development velocity by 40% through clear bounded contexts enabling parallel team work. Enhanced data integrity through event sourcing providing complete audit trails. Enabled rapid feature development with clean architecture facilitating testing and modifications. Maintained consistent performance under load through async processing and connection pooling.</p>
+
+
+			</heading-anchors>
+		</main>
+
+		<footer role="contentinfo">
+			<p>
+				<em>Built with <a href="https://www.11ty.dev/">Eleventy v3.1.2</a></em>
+			</p>
+		</footer>
+
+		<!-- This page `/projects/event-driven-microservices/` was built on 2026-01-29T15:21:09.641Z -->
+		<script type="module" src="/dist/cC8wS6ZjFU.js"></script>
+	</body>
+</html>

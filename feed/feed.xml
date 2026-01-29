@@ -1,0 +1,902 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet href="pretty-atom-feed.xsl" type="text/xsl"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+  <title>Jay Singh</title>
+  <subtitle>Jay Singh&#39;s portfolio - Software Engineer</subtitle>
+  <link href="https://jaysingh.dev/feed/feed.xml" rel="self" />
+  <link href="https://jaysingh.dev/" />
+  <updated>2024-11-01T00:00:00Z</updated>
+  <id>https://jaysingh.dev/</id>
+  <author>
+    <name>Jay Singh</name>
+  </author>
+  <entry>
+    <title>BUILDING EVENT-DRIVEN MICROSERVICES WITH FASTAPI</title>
+    <link href="https://jaysingh.dev/blog/building-fastapi-microservices/" />
+    <updated>2024-11-01T00:00:00Z</updated>
+    <id>https://jaysingh.dev/blog/building-fastapi-microservices/</id>
+    <content type="html">&lt;p&gt;Event-driven microservices enable building scalable, maintainable systems that can handle complex business logic while remaining loosely coupled. In this post, I&#39;ll share lessons learned from building a production microservices platform serving 5,000+ users.&lt;/p&gt;
+&lt;h2 id=&quot;why-fastapi-for-microservices&quot;&gt;Why FastAPI for Microservices?&lt;/h2&gt;
+&lt;p&gt;FastAPI is an excellent choice for microservices due to its async capabilities, automatic OpenAPI documentation, and Pydantic validation. Combined with SQLAlchemy 2.0&#39;s async support, you can build high-performance services that handle hundreds of concurrent requests.&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-python&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;from&lt;/span&gt; fastapi &lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; FastAPI
+&lt;span class=&quot;token keyword&quot;&gt;from&lt;/span&gt; pydantic &lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; BaseModel
+
+app &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; FastAPI&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;token class-name&quot;&gt;Event&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;BaseModel&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token builtin&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token builtin&quot;&gt;str&lt;/span&gt;
+    data&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token builtin&quot;&gt;dict&lt;/span&gt;
+
+&lt;span class=&quot;token decorator annotation punctuation&quot;&gt;@app&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;post&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;/events&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;handle_event&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;event&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Event&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;status&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;processed&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&quot;domain-driven-design-principles&quot;&gt;Domain-Driven Design Principles&lt;/h2&gt;
+&lt;p&gt;Domain-Driven Design helps organize complex business logic into bounded contexts. Each microservice owns its domain model and communicates with others through well-defined interfaces. This isolation makes testing easier and allows teams to work independently.&lt;/p&gt;
+&lt;pre class=&quot;language-mermaid&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-mermaid&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;graph&lt;/span&gt; TB
+    &lt;span class=&quot;token keyword&quot;&gt;subgraph&lt;/span&gt; Scan Context
+        A&lt;span class=&quot;token text string&quot;&gt;[Scan Service]&lt;/span&gt;
+        B&lt;span class=&quot;token text string&quot;&gt;[Analytics Engine]&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;end&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;subgraph&lt;/span&gt; Student Context
+        C&lt;span class=&quot;token text string&quot;&gt;[Student Service]&lt;/span&gt;
+        D&lt;span class=&quot;token text string&quot;&gt;[Data Integration]&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;end&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;subgraph&lt;/span&gt; Shared
+        E&lt;span class=&quot;token text string&quot;&gt;[Event Bus]&lt;/span&gt;
+        F&lt;span class=&quot;token text string&quot;&gt;[PostgreSQL]&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;end&lt;/span&gt;
+    A &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; E
+    C &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; E
+    E &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; B
+    E &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; D
+    A &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; F
+    C &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; F&lt;/code&gt;&lt;/pre&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Tip:&lt;/strong&gt; Use bounded contexts to isolate domains and enable independent team work. Each context should have clear boundaries and well-defined interfaces.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;key-architecture-patterns&quot;&gt;Key Architecture Patterns&lt;/h2&gt;
+&lt;p&gt;Several patterns are essential for building maintainable microservices: Repository pattern for data access, Adapter pattern for external integrations, dependency injection for testability, and CQRS for separating reads from writes. Use domain events to communicate between services rather than tight coupling.&lt;/p&gt;
+&lt;h3 id=&quot;repository-pattern-implementation&quot;&gt;Repository Pattern Implementation&lt;/h3&gt;
+&lt;pre class=&quot;language-python&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-python&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;from&lt;/span&gt; abc &lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; ABC&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; abstractmethod
+&lt;span class=&quot;token keyword&quot;&gt;from&lt;/span&gt; sqlalchemy&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;ext&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;asyncio &lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; AsyncSession
+
+&lt;span class=&quot;token keyword&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;token class-name&quot;&gt;EventRepository&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;ABC&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token decorator annotation punctuation&quot;&gt;@abstractmethod&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;save&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;self&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; event&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Event&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;&gt;&lt;/span&gt; &lt;span class=&quot;token boolean&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;token keyword&quot;&gt;pass&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;token class-name&quot;&gt;SQLEventRepository&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;EventRepository&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;__init__&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;self&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; session&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; AsyncSession&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+        self&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;session &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; session
+
+    &lt;span class=&quot;token keyword&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;save&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;self&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; event&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Event&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;&gt;&lt;/span&gt; &lt;span class=&quot;token boolean&quot;&gt;None&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+        self&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;session&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;add&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;event&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;token keyword&quot;&gt;await&lt;/span&gt; self&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;session&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;commit&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&quot;observability-is-critical&quot;&gt;Observability is Critical&lt;/h2&gt;
+&lt;p&gt;Instrument your services with Prometheus metrics, structured logging with Structlog, and distributed tracing with OpenTelemetry. This visibility is essential for debugging production issues.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Warning:&lt;/strong&gt; Without proper observability, you&#39;re flying blind. Always implement metrics, logging, and tracing from day one.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;real-world-results&quot;&gt;Real-World Results&lt;/h2&gt;
+&lt;p&gt;Our QR code platform processes 500+ daily interactions with sub-second response times using these patterns. Proper architecture enables scaling both the system and the team. The event-driven approach allowed us to maintain 99.9% uptime while continuously deploying new features.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Important:&lt;/strong&gt; Start with a solid architecture from the beginning. Refactoring a monolith into microservices is exponentially harder than building it right from day one.&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+  </entry>
+  <entry>
+    <title>IMPLEMENTING ZERO-TRUST AUTHENTICATION WITH OAUTH2-PROXY</title>
+    <link href="https://jaysingh.dev/blog/oauth2-authentication-gateway/" />
+    <updated>2024-10-15T00:00:00Z</updated>
+    <id>https://jaysingh.dev/blog/oauth2-authentication-gateway/</id>
+    <content type="html">&lt;p&gt;Modern web applications require robust authentication and authorization. A zero-trust architecture ensures every request is authenticated and authorized before accessing protected resources. Here&#39;s how we built an authentication gateway serving 5,181+ active users.&lt;/p&gt;
+&lt;h2 id=&quot;the-zero-trust-architecture&quot;&gt;The Zero-Trust Architecture&lt;/h2&gt;
+&lt;p&gt;OAuth2-Proxy acts as a reverse proxy that handles authentication before requests reach your application. Combined with Traefik as the ingress controller, you can protect entire services with just configuration changes. This pattern keeps authentication logic out of individual applications.&lt;/p&gt;
+&lt;pre class=&quot;language-mermaid&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-mermaid&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;graph&lt;/span&gt; LR
+    A&lt;span class=&quot;token text string&quot;&gt;[User]&lt;/span&gt; &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; B&lt;span class=&quot;token text string&quot;&gt;[Traefik Ingress]&lt;/span&gt;
+    B &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; C&lt;span class=&quot;token text string&quot;&gt;[OAuth2-Proxy]&lt;/span&gt;
+    C &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; D&lt;span class=&quot;token text string&quot;&gt;{Authenticated?}&lt;/span&gt;
+    D &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt;&lt;span class=&quot;token label property&quot;&gt;|No|&lt;/span&gt; E&lt;span class=&quot;token text string&quot;&gt;[Keycloak SSO]&lt;/span&gt;
+    E &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; A
+    D &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt;&lt;span class=&quot;token label property&quot;&gt;|Yes|&lt;/span&gt; F&lt;span class=&quot;token text string&quot;&gt;[Protected Service]&lt;/span&gt;
+    F &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; G&lt;span class=&quot;token text string&quot;&gt;[PostgreSQL]&lt;/span&gt;
+    C &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; H&lt;span class=&quot;token text string&quot;&gt;[Redis Session Store]&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&quot;keycloak-for-centralized-identity&quot;&gt;Keycloak for Centralized Identity&lt;/h2&gt;
+&lt;p&gt;Keycloak provides centralized identity management with SSO capabilities. Users log in once and access multiple applications seamlessly. It supports various authentication methods, role-based access control, and integrates with existing identity providers.&lt;/p&gt;
+&lt;pre class=&quot;language-yaml&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-yaml&quot;&gt;&lt;span class=&quot;token key atrule&quot;&gt;upstreams&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; protected&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;service
+    &lt;span class=&quot;token key atrule&quot;&gt;uri&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; http&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;//backend&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;8000&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;path&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; /
+
+&lt;span class=&quot;token key atrule&quot;&gt;providers&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; keycloak
+    &lt;span class=&quot;token key atrule&quot;&gt;provider&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; oidc
+    &lt;span class=&quot;token key atrule&quot;&gt;clientID&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; my&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;app
+    &lt;span class=&quot;token key atrule&quot;&gt;clientSecret&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; $&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;CLIENT_SECRET&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;oidcConfig&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;token key atrule&quot;&gt;issuerURL&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; https&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;//keycloak.example.com/realms/myrealm
+      &lt;span class=&quot;token key atrule&quot;&gt;audienceClaims&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; aud
+      &lt;span class=&quot;token key atrule&quot;&gt;emailClaim&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; email
+      &lt;span class=&quot;token key atrule&quot;&gt;groupsClaim&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; groups&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&quot;implementation-details&quot;&gt;Implementation Details&lt;/h2&gt;
+&lt;p&gt;The implementation consists of several key components working together:&lt;/p&gt;
+&lt;h3 id=&quot;oauth2-proxy-deployment&quot;&gt;OAuth2-Proxy Deployment&lt;/h3&gt;
+&lt;p&gt;Deploy OAuth2-Proxy as a sidecar container alongside your application. Configure it to validate tokens with Keycloak and maintain session state in Redis for horizontal scalability.&lt;/p&gt;
+&lt;h3 id=&quot;traefik-middleware-configuration&quot;&gt;Traefik Middleware Configuration&lt;/h3&gt;
+&lt;pre class=&quot;language-yaml&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-yaml&quot;&gt;&lt;span class=&quot;token key atrule&quot;&gt;apiVersion&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; traefik.containo.us/v1alpha1
+&lt;span class=&quot;token key atrule&quot;&gt;kind&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Middleware
+&lt;span class=&quot;token key atrule&quot;&gt;metadata&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; auth&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;middleware
+&lt;span class=&quot;token key atrule&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;token key atrule&quot;&gt;forwardAuth&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;address&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; http&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;//oauth2&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;proxy&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;4180/oauth2/auth
+    &lt;span class=&quot;token key atrule&quot;&gt;trustForwardHeader&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token boolean important&quot;&gt;true&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;authResponseHeaders&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; X&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;Auth&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;Request&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;User
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; X&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;Auth&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;Request&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;Email
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; X&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;Auth&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;Request&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;Groups&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&quot;role-based-access-control&quot;&gt;Role-Based Access Control&lt;/h3&gt;
+&lt;p&gt;Set up Keycloak realms and clients with appropriate roles. Implement RBAC by checking group membership in your application. OAuth2-Proxy passes user groups via headers for fine-grained authorization.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Warning:&lt;/strong&gt; Always validate authorization in your application layer, even with OAuth2-Proxy. Defense in depth is essential for security.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;security-best-practices&quot;&gt;Security Best Practices&lt;/h2&gt;
+&lt;p&gt;Security must be built into every layer of your authentication system:&lt;/p&gt;
+&lt;pre class=&quot;language-yaml&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-yaml&quot;&gt;&lt;span class=&quot;token key atrule&quot;&gt;headers&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;token key atrule&quot;&gt;customResponseHeaders&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;Strict-Transport-Security&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&quot;max-age=63072000&quot;&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;X-Frame-Options&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&quot;DENY&quot;&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;X-Content-Type-Options&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&quot;nosniff&quot;&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;Referrer-Policy&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&quot;strict-origin-when-cross-origin&quot;&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;Permissions-Policy&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&quot;geolocation=(), microphone=(), camera=()&quot;&lt;/span&gt;
+  &lt;span class=&quot;token key atrule&quot;&gt;contentSecurityPolicy&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&quot;default-src &#39;self&#39;; script-src &#39;self&#39;; style-src &#39;self&#39; &#39;unsafe-inline&#39;&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Always use HTTPS in production. Implement CSRF protection for state-changing operations. Set proper CORS headers to prevent unauthorized cross-origin requests. Use short-lived access tokens (15 minutes) with refresh tokens for extended sessions. Monitor authentication failures and implement rate limiting to prevent brute force attacks.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Important:&lt;/strong&gt; Store session data in Redis with appropriate TTLs. Never store sensitive data in browser storage. Use httpOnly, secure, and sameSite cookies.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;real-world-results&quot;&gt;Real-World Results&lt;/h2&gt;
+&lt;p&gt;Our authentication gateway protects 11 microservices and serves 5,181+ active users. The zero-trust architecture ensures every request is validated while providing seamless SSO experience. Users authenticate once and access all applications without repeated logins.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Tip:&lt;/strong&gt; With proper monitoring, we detected and blocked 200+ unauthorized access attempts in the first month. Security monitoring is not optional.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;The result: a secure, scalable authentication system that protects sensitive university data while providing seamless user experience across multiple applications. Response times remain under 100ms for authenticated requests, and the system scales horizontally to handle traffic spikes.&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>COMPREHENSIVE OBSERVABILITY FOR DOCKER MICROSERVICES</title>
+    <link href="https://jaysingh.dev/blog/docker-observability/" />
+    <updated>2024-09-22T00:00:00Z</updated>
+    <id>https://jaysingh.dev/blog/docker-observability/</id>
+    <content type="html">&lt;p&gt;You can&#39;t fix what you can&#39;t see. Observability is essential for running production microservices. Here&#39;s how we built comprehensive monitoring infrastructure that provides visibility into every layer of our stack serving 5,000+ users.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Warning:&lt;/strong&gt; Observability is not optional. Without it, you&#39;re flying blind in production. Instrument from day one, not after the first incident.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;the-three-pillars-of-observability&quot;&gt;The Three Pillars of Observability&lt;/h2&gt;
+&lt;p&gt;Complete observability requires three complementary approaches: metrics with Prometheus, logs with Grafana Loki, and traces with OpenTelemetry. Each provides different insights, and together they give you complete visibility into system behavior.&lt;/p&gt;
+&lt;pre class=&quot;language-mermaid&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-mermaid&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;graph&lt;/span&gt; TB
+    &lt;span class=&quot;token keyword&quot;&gt;subgraph&lt;/span&gt; Applications
+        A&lt;span class=&quot;token text string&quot;&gt;[FastAPI Service 1]&lt;/span&gt;
+        B&lt;span class=&quot;token text string&quot;&gt;[FastAPI Service 2]&lt;/span&gt;
+        C&lt;span class=&quot;token text string&quot;&gt;[FastAPI Service N]&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;end&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;subgraph&lt;/span&gt; Metrics
+        D&lt;span class=&quot;token text string&quot;&gt;[Prometheus]&lt;/span&gt;
+        E&lt;span class=&quot;token text string&quot;&gt;[Grafana]&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;end&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;subgraph&lt;/span&gt; Logs
+        F&lt;span class=&quot;token text string&quot;&gt;[Promtail]&lt;/span&gt;
+        G&lt;span class=&quot;token text string&quot;&gt;[Loki]&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;end&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;subgraph&lt;/span&gt; Traces
+        H&lt;span class=&quot;token text string&quot;&gt;[OpenTelemetry Collector]&lt;/span&gt;
+        I&lt;span class=&quot;token text string&quot;&gt;[Tempo]&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;end&lt;/span&gt;
+    A &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; D
+    B &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; D
+    C &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; D
+    A &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; F
+    B &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; F
+    C &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; F
+    A &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; H
+    B &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; H
+    C &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; H
+    D &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; E
+    F &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; G
+    G &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; E
+    H &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; I
+    I &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; E&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&quot;metrics-with-prometheus&quot;&gt;Metrics with Prometheus&lt;/h2&gt;
+&lt;p&gt;Prometheus collects time-series metrics from all services. Instrument your FastAPI applications with prometheus-client to expose custom metrics that matter to your business and operations.&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-python&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;from&lt;/span&gt; prometheus_client &lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; Counter&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; Histogram&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; generate_latest
+&lt;span class=&quot;token keyword&quot;&gt;from&lt;/span&gt; fastapi &lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; FastAPI&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; Response
+&lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; time
+
+app &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; FastAPI&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+request_count &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; Counter&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;token string&quot;&gt;&#39;http_requests_total&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;token string&quot;&gt;&#39;Total HTTP requests&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;method&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;endpoint&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;status&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+request_duration &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; Histogram&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;token string&quot;&gt;&#39;http_request_duration_seconds&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;token string&quot;&gt;&#39;HTTP request latency&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;method&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;endpoint&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;token decorator annotation punctuation&quot;&gt;@app&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;middleware&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;http&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;prometheus_middleware&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;request&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; call_next&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    start &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; time&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;time&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    response &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;await&lt;/span&gt; call_next&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;request&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    duration &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; time&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;time&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;-&lt;/span&gt; start
+
+    request_count&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;labels&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
+        method&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;request&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;method&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+        endpoint&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;request&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;url&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;path&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+        status&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;response&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;status_code
+    &lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;inc&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    request_duration&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;labels&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
+        method&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;request&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;method&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+        endpoint&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;request&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;url&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;path
+    &lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;observe&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;duration&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;return&lt;/span&gt; response
+
+&lt;span class=&quot;token decorator annotation punctuation&quot;&gt;@app&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;get&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;/metrics&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;metrics&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;return&lt;/span&gt; Response&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;content&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;generate_latest&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; media_type&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;text/plain&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Track what matters: request rates, error rates, latency percentiles (p50, p95, p99), business metrics like scans processed, and resource utilization (CPU, memory, connections). Create dashboards in Grafana to visualize trends and set alerts for anomalies.&lt;/p&gt;
+&lt;h2 id=&quot;logs-with-grafana-loki&quot;&gt;Logs with Grafana Loki&lt;/h2&gt;
+&lt;p&gt;Grafana Loki aggregates logs from all containers using Promtail. Use structured logging with Structlog to make logs searchable and correlatable. Include request IDs to trace requests across services.&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-python&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; structlog
+&lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; uuid
+&lt;span class=&quot;token keyword&quot;&gt;from&lt;/span&gt; fastapi &lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; Request
+
+structlog&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;configure&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
+    processors&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;
+        structlog&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;processors&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;TimeStamper&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;fmt&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;iso&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+        structlog&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;stdlib&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;add_log_level&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+        structlog&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;processors&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;JSONRenderer&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    wrapper_class&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;structlog&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;stdlib&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;BoundLogger&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    logger_factory&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;structlog&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;stdlib&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;LoggerFactory&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+logger &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; structlog&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;get_logger&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;token decorator annotation punctuation&quot;&gt;@app&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;middleware&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;http&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;logging_middleware&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;request&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Request&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; call_next&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    request_id &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token builtin&quot;&gt;str&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;uuid&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;uuid4&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    request&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;state&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;request_id &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; request_id
+
+    logger&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;info&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;token string&quot;&gt;&#39;request_started&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+        request_id&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;request_id&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+        method&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;request&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;method&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+        path&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;request&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;url&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;path&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+        client&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;request&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;client&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;host
+    &lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    response &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;await&lt;/span&gt; call_next&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;request&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    logger&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;info&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;token string&quot;&gt;&#39;request_completed&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+        request_id&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;request_id&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+        status_code&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;response&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;status_code
+    &lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;return&lt;/span&gt; response&lt;/code&gt;&lt;/pre&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Tip:&lt;/strong&gt; Structured logging is a game-changer. JSON logs are searchable, parseable, and correlatable. Never go back to parsing text logs.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;traces-with-opentelemetry&quot;&gt;Traces with OpenTelemetry&lt;/h2&gt;
+&lt;p&gt;OpenTelemetry provides distributed tracing. See exactly how requests flow through your microservices, identify bottlenecks, and understand dependencies. The automatic instrumentation for FastAPI makes adoption straightforward.&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-python&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;from&lt;/span&gt; opentelemetry &lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; trace
+&lt;span class=&quot;token keyword&quot;&gt;from&lt;/span&gt; opentelemetry&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;instrumentation&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;fastapi &lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; FastAPIInstrumentor
+&lt;span class=&quot;token keyword&quot;&gt;from&lt;/span&gt; opentelemetry&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;sdk&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;trace &lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; TracerProvider
+&lt;span class=&quot;token keyword&quot;&gt;from&lt;/span&gt; opentelemetry&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;sdk&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;trace&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;export &lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; BatchSpanProcessor
+&lt;span class=&quot;token keyword&quot;&gt;from&lt;/span&gt; opentelemetry&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;exporter&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;otlp&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;proto&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;grpc&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;trace_exporter &lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; OTLPSpanExporter
+
+trace&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;set_tracer_provider&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;TracerProvider&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+tracer &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; trace&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;get_tracer&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;__name__&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+otlp_exporter &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; OTLPSpanExporter&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
+    endpoint&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;http://otel-collector:4317&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    insecure&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token boolean&quot;&gt;True&lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+trace&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;get_tracer_provider&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;add_span_processor&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
+    BatchSpanProcessor&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;otlp_exporter&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+FastAPIInstrumentor&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;instrument_app&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;app&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;token decorator annotation punctuation&quot;&gt;@app&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;post&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;/process&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;async&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;process_data&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;data&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token builtin&quot;&gt;dict&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;with&lt;/span&gt; tracer&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;start_as_current_span&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;validate_data&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;token keyword&quot;&gt;pass&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;with&lt;/span&gt; tracer&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;start_as_current_span&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;save_to_database&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;token keyword&quot;&gt;pass&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;status&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;processed&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&quot;docker-compose-setup&quot;&gt;Docker Compose Setup&lt;/h2&gt;
+&lt;p&gt;Deploy the complete monitoring stack with Docker Compose. This setup runs alongside your microservices and collects data automatically.&lt;/p&gt;
+&lt;pre class=&quot;language-yaml&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-yaml&quot;&gt;&lt;span class=&quot;token key atrule&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;3.8&#39;&lt;/span&gt;
+
+&lt;span class=&quot;token key atrule&quot;&gt;services&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;token key atrule&quot;&gt;prometheus&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; prom/prometheus&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;latest
+    &lt;span class=&quot;token key atrule&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; ./prometheus.yml&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;/etc/prometheus/prometheus.yml
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; prometheus&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;data&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;/prometheus
+    &lt;span class=&quot;token key atrule&quot;&gt;ports&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;9090:9090&#39;&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;command&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;--config.file=/etc/prometheus/prometheus.yml&#39;&lt;/span&gt;
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;--storage.tsdb.retention.time=30d&#39;&lt;/span&gt;
+
+  &lt;span class=&quot;token key atrule&quot;&gt;grafana&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; grafana/grafana&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;latest
+    &lt;span class=&quot;token key atrule&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; grafana&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;data&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;/var/lib/grafana
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; ./grafana/dashboards&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;/etc/grafana/provisioning/dashboards
+    &lt;span class=&quot;token key atrule&quot;&gt;ports&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;3000:3000&#39;&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;environment&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; GF_SECURITY_ADMIN_PASSWORD=admin
+
+  &lt;span class=&quot;token key atrule&quot;&gt;loki&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; grafana/loki&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;latest
+    &lt;span class=&quot;token key atrule&quot;&gt;ports&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;3100:3100&#39;&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; loki&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;data&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;/loki
+
+  &lt;span class=&quot;token key atrule&quot;&gt;promtail&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;image&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; grafana/promtail&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;latest
+    &lt;span class=&quot;token key atrule&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; /var/lib/docker/containers&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;/var/lib/docker/containers&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;ro
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; ./promtail.yml&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;/etc/promtail/config.yml
+    &lt;span class=&quot;token key atrule&quot;&gt;command&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;config.file=/etc/promtail/config.yml
+
+&lt;span class=&quot;token key atrule&quot;&gt;volumes&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;token key atrule&quot;&gt;prometheus-data&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;token key atrule&quot;&gt;grafana-data&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;token key atrule&quot;&gt;loki-data&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&quot;creating-effective-dashboards&quot;&gt;Creating Effective Dashboards&lt;/h2&gt;
+&lt;p&gt;Build Grafana dashboards that tell a story. Start with high-level metrics (request rate, error rate, latency) then drill down into service-specific details. Use variables to filter by service, environment, or time range.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Important:&lt;/strong&gt; The RED method: Rate, Errors, Duration. These three metrics give you 80% of what you need to know about service health.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;alerting-rules&quot;&gt;Alerting Rules&lt;/h2&gt;
+&lt;p&gt;Set up Prometheus alerting rules for critical conditions. Alert on symptoms (user-facing issues) not causes. Group related alerts to avoid alert fatigue.&lt;/p&gt;
+&lt;pre class=&quot;language-yaml&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-yaml&quot;&gt;&lt;span class=&quot;token key atrule&quot;&gt;groups&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; api_alerts
+    &lt;span class=&quot;token key atrule&quot;&gt;rules&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;alert&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; HighErrorRate
+        &lt;span class=&quot;token key atrule&quot;&gt;expr&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;token scalar string&quot;&gt;
+          rate(http_requests_total{status=~&quot;5..&quot;}[5m])
+          / rate(http_requests_total[5m]) &gt; 0.05&lt;/span&gt;
+        &lt;span class=&quot;token key atrule&quot;&gt;for&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; 5m
+        &lt;span class=&quot;token key atrule&quot;&gt;labels&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;severity&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; critical
+        &lt;span class=&quot;token key atrule&quot;&gt;annotations&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;summary&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&quot;High error rate detected&quot;&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;description&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&quot;Error rate is {{ $value | humanizePercentage }}&quot;&lt;/span&gt;
+
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;alert&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; HighLatency
+        &lt;span class=&quot;token key atrule&quot;&gt;expr&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;token scalar string&quot;&gt;
+          histogram_quantile(0.95,
+            rate(http_request_duration_seconds_bucket[5m])
+          ) &gt; 1&lt;/span&gt;
+        &lt;span class=&quot;token key atrule&quot;&gt;for&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; 10m
+        &lt;span class=&quot;token key atrule&quot;&gt;labels&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;severity&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; warning
+        &lt;span class=&quot;token key atrule&quot;&gt;annotations&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;summary&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&quot;High request latency&quot;&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;description&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&quot;P95 latency is {{ $value }}s&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&quot;real-world-results&quot;&gt;Real-World Results&lt;/h2&gt;
+&lt;p&gt;Our 11-service architecture processes 500+ daily interactions across 11+ database tables. With proper observability, we maintain 99.9% uptime and can debug issues in minutes instead of hours. When problems occur, we have the data to understand exactly what happened and why.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Tip:&lt;/strong&gt; Observability paid for itself the first time we used it to debug a production issue. What would have taken hours was resolved in 10 minutes.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;The key is making observability a first-class concern from the start. Instrument your code, deploy the monitoring stack, create dashboards, and set up alerts. Your future self will thank you when the 3 AM page comes in and you can quickly identify and resolve the issue.&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>POSTGRESQL PERFORMANCE OPTIMIZATION FOR HIGH-TRAFFIC APPLICATIONS</title>
+    <link href="https://jaysingh.dev/blog/postgresql-performance/" />
+    <updated>2024-08-30T00:00:00Z</updated>
+    <id>https://jaysingh.dev/blog/postgresql-performance/</id>
+    <content type="html">&lt;p&gt;PostgreSQL is incredibly powerful, but it requires proper tuning for high-traffic applications. Here are the techniques we used to maintain sub-second response times while serving 5,000+ users with real-time analytics.&lt;/p&gt;
+&lt;h2 id=&quot;indexing-strategy&quot;&gt;Indexing Strategy&lt;/h2&gt;
+&lt;p&gt;Indexes are the foundation of database performance. Analyze your query patterns and create appropriate indexes, but understand the tradeoffs. Every index speeds up reads but slows down writes.&lt;/p&gt;
+&lt;pre class=&quot;language-sql&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-sql&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;EXPLAIN&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;ANALYZE&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;SELECT&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;FROM&lt;/span&gt; scans
+&lt;span class=&quot;token keyword&quot;&gt;WHERE&lt;/span&gt; user_id &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;123&lt;/span&gt;
+&lt;span class=&quot;token operator&quot;&gt;AND&lt;/span&gt; created_at &lt;span class=&quot;token operator&quot;&gt;&gt;&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;NOW&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;INTERVAL&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;30 days&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;CREATE&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;INDEX&lt;/span&gt; idx_scans_user_created
+&lt;span class=&quot;token keyword&quot;&gt;ON&lt;/span&gt; scans&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;user_id&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; created_at &lt;span class=&quot;token keyword&quot;&gt;DESC&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;CREATE&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;INDEX&lt;/span&gt; idx_active_users
+&lt;span class=&quot;token keyword&quot;&gt;ON&lt;/span&gt; users&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;email&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;WHERE&lt;/span&gt; is_active &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token boolean&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;CREATE&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;INDEX&lt;/span&gt; idx_scans_summary
+&lt;span class=&quot;token keyword&quot;&gt;ON&lt;/span&gt; scans&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;user_id&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+INCLUDE &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;scan_type&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; created_at&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Tip:&lt;/strong&gt; Use EXPLAIN ANALYZE, not just EXPLAIN. The actual execution plan can differ significantly from the estimated plan.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Don&#39;t over-index. Each index requires storage and maintenance overhead. Focus on indexes that support your most common and critical queries. Use pg_stat_user_indexes to identify unused indexes and remove them.&lt;/p&gt;
+&lt;h2 id=&quot;connection-pooling&quot;&gt;Connection Pooling&lt;/h2&gt;
+&lt;p&gt;Database connections are expensive. Use a connection pool like PgBouncer to manage connections efficiently and prevent connection exhaustion under high load.&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-python&quot;&gt;&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;databases&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+mydb &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; host&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;localhost port&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;5432&lt;/span&gt; dbname&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;production
+
+&lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;pgbouncer&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+pool_mode &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; transaction
+max_client_conn &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;1000&lt;/span&gt;
+default_pool_size &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;25&lt;/span&gt;
+reserve_pool_size &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;5&lt;/span&gt;
+reserve_pool_timeout &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;3&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;from&lt;/span&gt; sqlalchemy&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;ext&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;asyncio &lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; create_async_engine
+
+engine &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; create_async_engine&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;token string&quot;&gt;&#39;postgresql+asyncpg://user:pass@pgbouncer:6432/mydb&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    pool_size&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;20&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    max_overflow&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    pool_pre_ping&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token boolean&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    echo_pool&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token boolean&quot;&gt;True&lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Configure pool sizes based on your workload. Monitor connection usage with pg_stat_activity to avoid exhaustion. Use transaction pooling mode for maximum efficiency with stateless applications.&lt;/p&gt;
+&lt;h2 id=&quot;query-optimization&quot;&gt;Query Optimization&lt;/h2&gt;
+&lt;p&gt;Efficient queries are critical for performance. Avoid common pitfalls like N+1 queries and unindexed lookups.&lt;/p&gt;
+&lt;h3 id=&quot;avoiding-n-1-queries&quot;&gt;Avoiding N+1 Queries&lt;/h3&gt;
+&lt;pre class=&quot;language-python&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-python&quot;&gt;users &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;await&lt;/span&gt; session&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;execute&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;select&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;User&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;for&lt;/span&gt; user &lt;span class=&quot;token keyword&quot;&gt;in&lt;/span&gt; users&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;scalars&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    scans &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;await&lt;/span&gt; session&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;execute&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
+        select&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;Scan&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;where&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;Scan&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;user_id &lt;span class=&quot;token operator&quot;&gt;==&lt;/span&gt; user&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token builtin&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+result &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;await&lt;/span&gt; session&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;execute&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
+    select&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;User&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;options&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;selectinload&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;User&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;scans&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+users &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; result&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;scalars&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token builtin&quot;&gt;all&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+result &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;await&lt;/span&gt; session&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;execute&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
+    select&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;User&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; Scan&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;join&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;Scan&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; User&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token builtin&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;==&lt;/span&gt; Scan&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;user_id&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+SELECT
+    u&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    COUNT&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;s&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token builtin&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; OVER &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;PARTITION BY u&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token builtin&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;as&lt;/span&gt; scan_count
+FROM users u
+LEFT JOIN scans s ON u&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;token builtin&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; s&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;user_id&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&quot;pagination-and-result-limits&quot;&gt;Pagination and Result Limits&lt;/h3&gt;
+&lt;pre class=&quot;language-sql&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-sql&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;SELECT&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;FROM&lt;/span&gt; scans
+&lt;span class=&quot;token keyword&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;created_at&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; id&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;$&lt;span class=&quot;token number&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; $&lt;span class=&quot;token number&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;ORDER&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;BY&lt;/span&gt; created_at &lt;span class=&quot;token keyword&quot;&gt;DESC&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; id &lt;span class=&quot;token keyword&quot;&gt;DESC&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;LIMIT&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;50&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;CREATE&lt;/span&gt; MATERIALIZED &lt;span class=&quot;token keyword&quot;&gt;VIEW&lt;/span&gt; daily_stats &lt;span class=&quot;token keyword&quot;&gt;AS&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;SELECT&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;DATE&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;created_at&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;date&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;token function&quot;&gt;COUNT&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;as&lt;/span&gt; scan_count&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;token function&quot;&gt;COUNT&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token keyword&quot;&gt;DISTINCT&lt;/span&gt; user_id&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;as&lt;/span&gt; unique_users
+&lt;span class=&quot;token keyword&quot;&gt;FROM&lt;/span&gt; scans
+&lt;span class=&quot;token keyword&quot;&gt;GROUP&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;BY&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;DATE&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;created_at&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;CREATE&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;INDEX&lt;/span&gt; idx_daily_stats_date &lt;span class=&quot;token keyword&quot;&gt;ON&lt;/span&gt; daily_stats&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token keyword&quot;&gt;date&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+
+REFRESH MATERIALIZED &lt;span class=&quot;token keyword&quot;&gt;VIEW&lt;/span&gt; CONCURRENTLY daily_stats&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Important:&lt;/strong&gt; Materialized views are perfect for dashboards and reports. They cache expensive aggregations and can be refreshed on a schedule.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;database-design&quot;&gt;Database Design&lt;/h2&gt;
+&lt;p&gt;Good schema design prevents performance problems before they start. Normalize for data integrity, but denormalize strategically for performance.&lt;/p&gt;
+&lt;pre class=&quot;language-sql&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-sql&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;CREATE&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;TABLE&lt;/span&gt; scans &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
+    id UUID &lt;span class=&quot;token keyword&quot;&gt;PRIMARY&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;KEY&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;DEFAULT&lt;/span&gt; gen_random_uuid&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    user_id UUID &lt;span class=&quot;token operator&quot;&gt;NOT&lt;/span&gt; &lt;span class=&quot;token boolean&quot;&gt;NULL&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;REFERENCES&lt;/span&gt; users&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;id&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    scan_type &lt;span class=&quot;token keyword&quot;&gt;VARCHAR&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;50&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;NOT&lt;/span&gt; &lt;span class=&quot;token boolean&quot;&gt;NULL&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    metadata JSONB&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    created_at TIMESTAMPTZ &lt;span class=&quot;token keyword&quot;&gt;DEFAULT&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;NOW&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+
+    &lt;span class=&quot;token keyword&quot;&gt;CONSTRAINT&lt;/span&gt; valid_scan_type
+        &lt;span class=&quot;token keyword&quot;&gt;CHECK&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;scan_type &lt;span class=&quot;token operator&quot;&gt;IN&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;qr&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;barcode&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;nfc&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;token keyword&quot;&gt;CONSTRAINT&lt;/span&gt; metadata_not_empty
+        &lt;span class=&quot;token keyword&quot;&gt;CHECK&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;jsonb_typeof&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;metadata&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;object&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;CREATE&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;INDEX&lt;/span&gt; idx_scans_metadata
+&lt;span class=&quot;token keyword&quot;&gt;ON&lt;/span&gt; scans &lt;span class=&quot;token keyword&quot;&gt;USING&lt;/span&gt; GIN &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;metadata&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;CREATE&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;TABLE&lt;/span&gt; scans_partitioned &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;token operator&quot;&gt;LIKE&lt;/span&gt; scans INCLUDING &lt;span class=&quot;token keyword&quot;&gt;ALL&lt;/span&gt;
+&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;PARTITION&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;BY&lt;/span&gt; RANGE &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;created_at&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;CREATE&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;TABLE&lt;/span&gt; scans_2024_11
+&lt;span class=&quot;token keyword&quot;&gt;PARTITION&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;OF&lt;/span&gt; scans_partitioned
+&lt;span class=&quot;token keyword&quot;&gt;FOR&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;VALUES&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;FROM&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;2024-11-01&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;TO&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;2024-12-01&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;CREATE&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;TABLE&lt;/span&gt; scans_2024_12
+&lt;span class=&quot;token keyword&quot;&gt;PARTITION&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;OF&lt;/span&gt; scans_partitioned
+&lt;span class=&quot;token keyword&quot;&gt;FOR&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;VALUES&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;FROM&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;2024-12-01&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;TO&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;2025-01-01&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Partitioning is essential for tables with time-series data. Query performance improves dramatically when PostgreSQL can eliminate entire partitions from the scan.&lt;/p&gt;
+&lt;h2 id=&quot;monitoring-and-maintenance&quot;&gt;Monitoring and Maintenance&lt;/h2&gt;
+&lt;p&gt;Continuous monitoring prevents performance degradation. Track query performance, connection usage, and table statistics.&lt;/p&gt;
+&lt;pre class=&quot;language-sql&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-sql&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;SELECT&lt;/span&gt;
+    query&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    calls&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    total_exec_time&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    mean_exec_time&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    max_exec_time
+&lt;span class=&quot;token keyword&quot;&gt;FROM&lt;/span&gt; pg_stat_statements
+&lt;span class=&quot;token keyword&quot;&gt;ORDER&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;BY&lt;/span&gt; mean_exec_time &lt;span class=&quot;token keyword&quot;&gt;DESC&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;LIMIT&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;SELECT&lt;/span&gt;
+    schemaname&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    tablename&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    indexname&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    idx_scan&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    idx_tup_read&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    idx_tup_fetch
+&lt;span class=&quot;token keyword&quot;&gt;FROM&lt;/span&gt; pg_stat_user_indexes
+&lt;span class=&quot;token keyword&quot;&gt;WHERE&lt;/span&gt; idx_scan &lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;0&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;ORDER&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;BY&lt;/span&gt; pg_size_pretty&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;pg_relation_size&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;indexrelid&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;DESC&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;SELECT&lt;/span&gt;
+    state&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;token function&quot;&gt;COUNT&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token operator&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;FROM&lt;/span&gt; pg_stat_activity
+&lt;span class=&quot;token keyword&quot;&gt;GROUP&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;BY&lt;/span&gt; state&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;SELECT&lt;/span&gt;
+    schemaname&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    tablename&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    n_dead_tup&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    n_live_tup&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;token function&quot;&gt;ROUND&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;n_dead_tup &lt;span class=&quot;token operator&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;100.0&lt;/span&gt; &lt;span class=&quot;token operator&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;NULLIF&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;n_live_tup &lt;span class=&quot;token operator&quot;&gt;+&lt;/span&gt; n_dead_tup&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;as&lt;/span&gt; dead_pct
+&lt;span class=&quot;token keyword&quot;&gt;FROM&lt;/span&gt; pg_stat_user_tables
+&lt;span class=&quot;token keyword&quot;&gt;WHERE&lt;/span&gt; n_dead_tup &lt;span class=&quot;token operator&quot;&gt;&gt;&lt;/span&gt; &lt;span class=&quot;token number&quot;&gt;1000&lt;/span&gt;
+&lt;span class=&quot;token keyword&quot;&gt;ORDER&lt;/span&gt; &lt;span class=&quot;token keyword&quot;&gt;BY&lt;/span&gt; dead_pct &lt;span class=&quot;token keyword&quot;&gt;DESC&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Warning:&lt;/strong&gt; Enable pg_stat_statements extension for query performance tracking. It&#39;s essential for identifying bottlenecks in production.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Run VACUUM ANALYZE regularly to maintain table statistics and reclaim space. Consider autovacuum tuning for high-write workloads. Set up monitoring alerts for connection exhaustion, slow queries, and replication lag.&lt;/p&gt;
+&lt;h2 id=&quot;real-world-results&quot;&gt;Real-World Results&lt;/h2&gt;
+&lt;p&gt;Our analytics pipeline processes 11+ table schemas with real-time event sourcing while maintaining 99.9% uptime. Query response times average under 100ms for indexed lookups and under 2 seconds for complex aggregations.&lt;/p&gt;
+&lt;pre class=&quot;language-mermaid&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-mermaid&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;graph&lt;/span&gt; LR
+    A&lt;span class=&quot;token text string&quot;&gt;[Application]&lt;/span&gt; &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; B&lt;span class=&quot;token text string&quot;&gt;[PgBouncer]&lt;/span&gt;
+    B &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; C&lt;span class=&quot;token text string&quot;&gt;[Primary DB]&lt;/span&gt;
+    C &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; D&lt;span class=&quot;token text string&quot;&gt;[Read Replica 1]&lt;/span&gt;
+    C &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; E&lt;span class=&quot;token text string&quot;&gt;[Read Replica 2]&lt;/span&gt;
+    A &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; D
+    A &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; E
+    F&lt;span class=&quot;token text string&quot;&gt;[Analytics]&lt;/span&gt; &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; E
+    G&lt;span class=&quot;token text string&quot;&gt;[Prometheus]&lt;/span&gt; &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; C
+    G &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; D
+    G &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; E&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Proper optimization enabled us to handle 5,000+ concurrent users with minimal hardware. The key is measuring first, optimizing second. Use the built-in PostgreSQL monitoring tools to identify bottlenecks, then apply targeted optimizations.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Tip:&lt;/strong&gt; Premature optimization is the root of all evil, but measuring is not premature. Always instrument and monitor from day one.&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+  </entry>
+  <entry>
+    <title>CI/CD BEST PRACTICES WITH GITHUB ACTIONS</title>
+    <link href="https://jaysingh.dev/blog/ci-cd-best-practices/" />
+    <updated>2024-07-18T00:00:00Z</updated>
+    <id>https://jaysingh.dev/blog/ci-cd-best-practices/</id>
+    <content type="html">&lt;p&gt;Continuous Integration and Continuous Deployment enable shipping features faster while maintaining quality. Here&#39;s how we built CI/CD pipelines that reduced deployment time from hours to minutes while serving 5,000+ users.&lt;/p&gt;
+&lt;h2 id=&quot;why-github-actions&quot;&gt;Why GitHub Actions?&lt;/h2&gt;
+&lt;p&gt;GitHub Actions provides powerful workflow automation directly integrated with your repository. Native integration means no external configuration, and the marketplace offers thousands of pre-built actions.&lt;/p&gt;
+&lt;pre class=&quot;language-mermaid&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-mermaid&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;graph&lt;/span&gt; LR
+    A&lt;span class=&quot;token text string&quot;&gt;[Push Code]&lt;/span&gt; &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; B&lt;span class=&quot;token text string&quot;&gt;[GitHub Actions]&lt;/span&gt;
+    B &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; C&lt;span class=&quot;token text string&quot;&gt;[Run Tests]&lt;/span&gt;
+    B &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; D&lt;span class=&quot;token text string&quot;&gt;[Type Checking]&lt;/span&gt;
+    B &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; E&lt;span class=&quot;token text string&quot;&gt;[Security Scan]&lt;/span&gt;
+    C &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; F&lt;span class=&quot;token text string&quot;&gt;{All Pass?}&lt;/span&gt;
+    D &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; F
+    E &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; F
+    F &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt;&lt;span class=&quot;token label property&quot;&gt;|Yes|&lt;/span&gt; G&lt;span class=&quot;token text string&quot;&gt;[Build Container]&lt;/span&gt;
+    G &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; H&lt;span class=&quot;token text string&quot;&gt;[Push to Registry]&lt;/span&gt;
+    H &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; I&lt;span class=&quot;token text string&quot;&gt;[Deploy]&lt;/span&gt;
+    I &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt; J&lt;span class=&quot;token text string&quot;&gt;[Health Check]&lt;/span&gt;
+    J &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt;&lt;span class=&quot;token label property&quot;&gt;|Fail|&lt;/span&gt; K&lt;span class=&quot;token text string&quot;&gt;[Rollback]&lt;/span&gt;
+    J &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt;&lt;span class=&quot;token label property&quot;&gt;|Pass|&lt;/span&gt; L&lt;span class=&quot;token text string&quot;&gt;[Complete]&lt;/span&gt;
+    F &lt;span class=&quot;token arrow operator&quot;&gt;--&gt;&lt;/span&gt;&lt;span class=&quot;token label property&quot;&gt;|No|&lt;/span&gt; M&lt;span class=&quot;token text string&quot;&gt;[Fail Build]&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&quot;automated-testing-pipeline&quot;&gt;Automated Testing Pipeline&lt;/h2&gt;
+&lt;p&gt;Quality gates are essential. Your CI pipeline should catch issues before they reach production.&lt;/p&gt;
+&lt;pre class=&quot;language-yaml&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-yaml&quot;&gt;&lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Test
+
+&lt;span class=&quot;token key atrule&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;token key atrule&quot;&gt;push&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;branches&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;main&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; develop&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;token key atrule&quot;&gt;pull_request&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;branches&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;main&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+
+&lt;span class=&quot;token key atrule&quot;&gt;jobs&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;token key atrule&quot;&gt;test&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;runs-on&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; ubuntu&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;latest
+    &lt;span class=&quot;token key atrule&quot;&gt;strategy&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;token key atrule&quot;&gt;matrix&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;token key atrule&quot;&gt;python-version&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;3.10&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;3.11&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;3.12&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+
+    &lt;span class=&quot;token key atrule&quot;&gt;steps&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;uses&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; actions/checkout@v4
+
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Set up Python
+        &lt;span class=&quot;token key atrule&quot;&gt;uses&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; actions/setup&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;python@v5
+        &lt;span class=&quot;token key atrule&quot;&gt;with&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;python-version&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; $&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; matrix.python&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;version &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;cache&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;pip&#39;&lt;/span&gt;
+
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Install dependencies
+        &lt;span class=&quot;token key atrule&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;token scalar string&quot;&gt;
+          pip install -r requirements.txt
+          pip install pytest pytest-cov mypy black ruff pip-audit&lt;/span&gt;
+
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Run type checking
+        &lt;span class=&quot;token key atrule&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; mypy src/
+
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Check formatting
+        &lt;span class=&quot;token key atrule&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;token scalar string&quot;&gt;
+          black --check src/
+          ruff check src/&lt;/span&gt;
+
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Run security audit
+        &lt;span class=&quot;token key atrule&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; pip&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;audit
+
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Run tests with coverage
+        &lt;span class=&quot;token key atrule&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;token scalar string&quot;&gt;
+          pytest tests/ &#92;
+            --cov=src &#92;
+            --cov-report=xml &#92;
+            --cov-report=term &#92;
+            --cov-fail-under=80&lt;/span&gt;
+
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Upload coverage
+        &lt;span class=&quot;token key atrule&quot;&gt;uses&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; codecov/codecov&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;action@v3
+        &lt;span class=&quot;token key atrule&quot;&gt;with&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;file&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; ./coverage.xml&lt;/code&gt;&lt;/pre&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Tip:&lt;/strong&gt; Use matrix builds to test across multiple Python versions. Catch compatibility issues before your users do.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;optimized-container-builds&quot;&gt;Optimized Container Builds&lt;/h2&gt;
+&lt;p&gt;Multi-stage Docker builds minimize image size and improve security. Layer caching makes rebuilds fast.&lt;/p&gt;
+&lt;pre class=&quot;language-dockerfile&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-dockerfile&quot;&gt;&lt;span class=&quot;token instruction&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;FROM&lt;/span&gt; python:3.11-slim &lt;span class=&quot;token keyword&quot;&gt;as&lt;/span&gt; builder&lt;/span&gt;
+
+&lt;span class=&quot;token instruction&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;WORKDIR&lt;/span&gt; /app&lt;/span&gt;
+
+&lt;span class=&quot;token instruction&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;COPY&lt;/span&gt; requirements.txt .&lt;/span&gt;
+&lt;span class=&quot;token instruction&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;RUN&lt;/span&gt; pip install --user --no-cache-dir -r requirements.txt&lt;/span&gt;
+
+&lt;span class=&quot;token instruction&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;FROM&lt;/span&gt; python:3.11-slim&lt;/span&gt;
+
+&lt;span class=&quot;token instruction&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;WORKDIR&lt;/span&gt; /app&lt;/span&gt;
+
+&lt;span class=&quot;token instruction&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;COPY&lt;/span&gt; &lt;span class=&quot;token options&quot;&gt;&lt;span class=&quot;token property&quot;&gt;--from&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;builder&lt;/span&gt;&lt;/span&gt; /root/.local /root/.local&lt;/span&gt;
+&lt;span class=&quot;token instruction&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;COPY&lt;/span&gt; src/ ./src/&lt;/span&gt;
+
+&lt;span class=&quot;token instruction&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;RUN&lt;/span&gt; useradd -m -u 1000 appuser &amp;amp;&amp;amp; chown -R appuser:appuser /app&lt;/span&gt;
+&lt;span class=&quot;token instruction&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;USER&lt;/span&gt; appuser&lt;/span&gt;
+
+&lt;span class=&quot;token instruction&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;ENV&lt;/span&gt; PATH=/root/.local/bin:&lt;span class=&quot;token variable&quot;&gt;$PATH&lt;/span&gt;&lt;/span&gt;
+
+&lt;span class=&quot;token instruction&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;CMD&lt;/span&gt; [&lt;span class=&quot;token string&quot;&gt;&quot;python&quot;&lt;/span&gt;, &lt;span class=&quot;token string&quot;&gt;&quot;-m&quot;&lt;/span&gt;, &lt;span class=&quot;token string&quot;&gt;&quot;uvicorn&quot;&lt;/span&gt;, &lt;span class=&quot;token string&quot;&gt;&quot;src.main:app&quot;&lt;/span&gt;, &lt;span class=&quot;token string&quot;&gt;&quot;--host&quot;&lt;/span&gt;, &lt;span class=&quot;token string&quot;&gt;&quot;0.0.0.0&quot;&lt;/span&gt;, &lt;span class=&quot;token string&quot;&gt;&quot;--port&quot;&lt;/span&gt;, &lt;span class=&quot;token string&quot;&gt;&quot;8000&quot;&lt;/span&gt;]&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;pre class=&quot;language-yaml&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-yaml&quot;&gt;&lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Build and Push
+
+&lt;span class=&quot;token key atrule&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;token key atrule&quot;&gt;push&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;branches&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;main&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;tags&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;v*&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+
+&lt;span class=&quot;token key atrule&quot;&gt;jobs&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;token key atrule&quot;&gt;build&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;runs-on&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; ubuntu&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;latest
+    &lt;span class=&quot;token key atrule&quot;&gt;permissions&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;token key atrule&quot;&gt;contents&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; read
+      &lt;span class=&quot;token key atrule&quot;&gt;packages&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; write
+
+    &lt;span class=&quot;token key atrule&quot;&gt;steps&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;uses&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; actions/checkout@v4
+
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Set up Docker Buildx
+        &lt;span class=&quot;token key atrule&quot;&gt;uses&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; docker/setup&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;buildx&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;action@v3
+
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Log in to Registry
+        &lt;span class=&quot;token key atrule&quot;&gt;uses&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; docker/login&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;action@v3
+        &lt;span class=&quot;token key atrule&quot;&gt;with&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;registry&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; ghcr.io
+          &lt;span class=&quot;token key atrule&quot;&gt;username&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; $&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; github.actor &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; $&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; secrets.GITHUB_TOKEN &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Extract metadata
+        &lt;span class=&quot;token key atrule&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; meta
+        &lt;span class=&quot;token key atrule&quot;&gt;uses&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; docker/metadata&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;action@v5
+        &lt;span class=&quot;token key atrule&quot;&gt;with&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;images&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; ghcr.io/$&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; github.repository &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;tags&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;token scalar string&quot;&gt;
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha,prefix={{branch}}-&lt;/span&gt;
+
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Build and push
+        &lt;span class=&quot;token key atrule&quot;&gt;uses&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; docker/build&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;push&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;action@v5
+        &lt;span class=&quot;token key atrule&quot;&gt;with&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; .
+          &lt;span class=&quot;token key atrule&quot;&gt;push&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token boolean important&quot;&gt;true&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;tags&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; $&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; steps.meta.outputs.tags &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;labels&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; $&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; steps.meta.outputs.labels &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;cache-from&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; type=gha
+          &lt;span class=&quot;token key atrule&quot;&gt;cache-to&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; type=gha&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;mode=max
+
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Scan image
+        &lt;span class=&quot;token key atrule&quot;&gt;uses&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; aquasecurity/trivy&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;action@master
+        &lt;span class=&quot;token key atrule&quot;&gt;with&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;image-ref&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; $&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; steps.meta.outputs.tags &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;sarif&#39;&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;output&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;trivy-results.sarif&#39;&lt;/span&gt;
+
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Upload scan results
+        &lt;span class=&quot;token key atrule&quot;&gt;uses&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; github/codeql&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;action/upload&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;sarif@v2
+        &lt;span class=&quot;token key atrule&quot;&gt;with&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;sarif_file&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;trivy-results.sarif&#39;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Warning:&lt;/strong&gt; Never use &#39;latest&#39; tag in production. Always use specific versions or commit SHAs for reproducibility.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;zero-downtime-deployment&quot;&gt;Zero-Downtime Deployment&lt;/h2&gt;
+&lt;p&gt;Rolling deployments ensure users never experience downtime. Health checks validate each instance before routing traffic.&lt;/p&gt;
+&lt;pre class=&quot;language-yaml&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-yaml&quot;&gt;&lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Deploy
+
+&lt;span class=&quot;token key atrule&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;token key atrule&quot;&gt;workflow_run&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;workflows&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&quot;Build and Push&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;types&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;completed&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;branches&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;main&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+
+&lt;span class=&quot;token key atrule&quot;&gt;jobs&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;token key atrule&quot;&gt;deploy&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;runs-on&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; ubuntu&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;latest
+    &lt;span class=&quot;token key atrule&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; $&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; github.event.workflow_run.conclusion == &#39;success&#39; &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;token key atrule&quot;&gt;steps&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;uses&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; actions/checkout@v4
+
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Run database migrations
+        &lt;span class=&quot;token key atrule&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;token scalar string&quot;&gt;
+          docker run --rm &#92;
+            --network=production &#92;
+            -e DATABASE_URL=${{ secrets.DATABASE_URL }} &#92;
+            ghcr.io/${{ github.repository }}:${{ github.sha }} &#92;
+            alembic upgrade head&lt;/span&gt;
+
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Deploy with rolling update
+        &lt;span class=&quot;token key atrule&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;token scalar string&quot;&gt;
+          docker service update &#92;
+            --image ghcr.io/${{ github.repository }}:${{ github.sha }} &#92;
+            --update-parallelism 1 &#92;
+            --update-delay 30s &#92;
+            --update-order start-first &#92;
+            --health-cmd &quot;curl -f http://localhost:8000/health || exit 1&quot; &#92;
+            --health-interval 10s &#92;
+            --health-retries 3 &#92;
+            production_api&lt;/span&gt;
+
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Wait for rollout
+        &lt;span class=&quot;token key atrule&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;token scalar string&quot;&gt;
+          timeout 300 bash -c &#39;until [ &quot;$(docker service ps production_api --filter desired-state=running -q | wc -l)&quot; -eq &quot;3&quot; ]; do sleep 5; done&#39;&lt;/span&gt;
+
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Verify deployment
+        &lt;span class=&quot;token key atrule&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;token scalar string&quot;&gt;
+          response=$(curl -f -s -o /dev/null -w &quot;%{http_code}&quot; https://api.example.com/health)
+          if [ $response -ne 200 ]; then
+            echo &quot;Health check failed with status $response&quot;
+            docker service rollback production_api
+            exit 1
+          fi&lt;/span&gt;
+
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Notify on failure
+        &lt;span class=&quot;token key atrule&quot;&gt;if&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; failure()
+        &lt;span class=&quot;token key atrule&quot;&gt;uses&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; slackapi/slack&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;github&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;action@v1
+        &lt;span class=&quot;token key atrule&quot;&gt;with&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;webhook-url&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; $&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;{&lt;/span&gt; secrets.SLACK_WEBHOOK &lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;}&lt;/span&gt;
+          &lt;span class=&quot;token key atrule&quot;&gt;payload&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;token scalar string&quot;&gt;
+            {
+              &quot;text&quot;: &quot;Deployment failed for ${{ github.repository }}&quot;,
+              &quot;blocks&quot;: [
+                {
+                  &quot;type&quot;: &quot;section&quot;,
+                  &quot;text&quot;: {
+                    &quot;type&quot;: &quot;mrkdwn&quot;,
+                    &quot;text&quot;: &quot;*Deployment Failed* :x:&#92;nRepository: ${{ github.repository }}&#92;nCommit: ${{ github.sha }}&quot;
+                  }
+                }
+              ]
+            }&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&quot;database-migrations&quot;&gt;Database Migrations&lt;/h2&gt;
+&lt;p&gt;Always run migrations before deploying new code. Use Alembic for safe, versioned database changes.&lt;/p&gt;
+&lt;pre class=&quot;language-python&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-python&quot;&gt;&lt;span class=&quot;token keyword&quot;&gt;from&lt;/span&gt; alembic &lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; op
+&lt;span class=&quot;token keyword&quot;&gt;import&lt;/span&gt; sqlalchemy &lt;span class=&quot;token keyword&quot;&gt;as&lt;/span&gt; sa
+
+&lt;span class=&quot;token keyword&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;upgrade&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    op&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;add_column&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;token string&quot;&gt;&#39;scans&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+        sa&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;Column&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;status&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; sa&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;String&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token number&quot;&gt;50&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; nullable&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token boolean&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    op&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;execute&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;token string&quot;&gt;&quot;UPDATE scans SET status = &#39;completed&#39; WHERE status IS NULL&quot;&lt;/span&gt;
+    &lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    op&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;alter_column&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;scans&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;status&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; nullable&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token boolean&quot;&gt;False&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+    op&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;create_index&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;
+        &lt;span class=&quot;token string&quot;&gt;&#39;idx_scans_status&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;token string&quot;&gt;&#39;scans&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt;
+        &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;status&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;token keyword&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;token function&quot;&gt;downgrade&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    op&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;drop_index&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;idx_scans_status&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; table_name&lt;span class=&quot;token operator&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;scans&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;
+    op&lt;span class=&quot;token punctuation&quot;&gt;.&lt;/span&gt;drop_column&lt;span class=&quot;token punctuation&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&#39;scans&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;token string&quot;&gt;&#39;status&#39;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Important:&lt;/strong&gt; Always write reversible migrations. You should be able to roll back any change without data loss.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;monitoring-and-observability&quot;&gt;Monitoring and Observability&lt;/h2&gt;
+&lt;p&gt;Track deployment metrics to understand pipeline health and identify bottlenecks.&lt;/p&gt;
+&lt;pre class=&quot;language-yaml&quot; tabindex=&quot;0&quot;&gt;&lt;code class=&quot;language-yaml&quot;&gt;&lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Deployment Metrics
+
+&lt;span class=&quot;token key atrule&quot;&gt;on&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;token key atrule&quot;&gt;workflow_run&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;workflows&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;token string&quot;&gt;&quot;Deploy&quot;&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;types&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;[&lt;/span&gt;completed&lt;span class=&quot;token punctuation&quot;&gt;]&lt;/span&gt;
+
+&lt;span class=&quot;token key atrule&quot;&gt;jobs&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;token key atrule&quot;&gt;metrics&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;token key atrule&quot;&gt;runs-on&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; ubuntu&lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt;latest
+    &lt;span class=&quot;token key atrule&quot;&gt;steps&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Record deployment metrics
+        &lt;span class=&quot;token key atrule&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;token scalar string&quot;&gt;
+          curl -X POST https://api.example.com/metrics &#92;
+            -H &quot;Content-Type: application/json&quot; &#92;
+            -d &#39;{
+              &quot;metric&quot;: &quot;deployment.completed&quot;,
+              &quot;value&quot;: 1,
+              &quot;tags&quot;: {
+                &quot;status&quot;: &quot;${{ github.event.workflow_run.conclusion }}&quot;,
+                &quot;branch&quot;: &quot;${{ github.ref_name }}&quot;,
+                &quot;duration&quot;: &quot;${{ github.event.workflow_run.duration }}&quot;
+              }
+            }&#39;&lt;/span&gt;
+
+      &lt;span class=&quot;token punctuation&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;token key atrule&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; Check error rate
+        &lt;span class=&quot;token key atrule&quot;&gt;run&lt;/span&gt;&lt;span class=&quot;token punctuation&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;token punctuation&quot;&gt;|&lt;/span&gt;&lt;span class=&quot;token scalar string&quot;&gt;
+          error_rate=$(curl -s https://api.example.com/metrics/errors | jq &#39;.rate&#39;)
+          if (( $(echo &quot;$error_rate &gt; 0.05&quot; | bc -l) )); then
+            echo &quot;Error rate too high: $error_rate&quot;
+            curl -X POST https://api.example.com/rollback &#92;
+              -H &quot;Authorization: Bearer ${{ secrets.API_TOKEN }}&quot;
+            exit 1
+          fi&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;
+&lt;h2 id=&quot;real-world-results&quot;&gt;Real-World Results&lt;/h2&gt;
+&lt;p&gt;Our CI/CD pipeline enables multiple deployments per day with confidence. Automated testing catches 95% of bugs before code review. Zero-downtime deployments ensure 5,000+ users never experience service interruptions.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Tip:&lt;/strong&gt; We reduced deployment time from 2 hours of manual work to 8 minutes of automated deployment. The ROI on CI/CD automation is immediate.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Key principle: automate everything, but make it easy to override when needed. The best pipelines are reliable, fast, and transparent. Developers should trust the pipeline and understand what it does at every step.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;&lt;strong&gt;Important:&lt;/strong&gt; Start simple and iterate. A basic CI/CD pipeline that works is better than a complex one that&#39;s always breaking.&lt;/p&gt;
+&lt;/blockquote&gt;
+</content>
+  </entry>
+</feed>

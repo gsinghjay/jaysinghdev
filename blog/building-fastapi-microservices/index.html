@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>BUILDING EVENT-DRIVEN MICROSERVICES WITH FASTAPI</title>
+		<meta name="description" content="Jay Singh&#39;s portfolio - Software Engineer">
+		<link rel="alternate" href="/feed/feed.xml" type="application/atom+xml" title="Jay Singh">
+		
+		
+		<link rel="stylesheet" href="/css/main.css">
+		
+		<style>/* This is an arbitrary CSS string added to the bundle */
+/* Defaults */
+:root {
+	--font-family: -apple-system, system-ui, sans-serif;
+	--font-family-monospace: Consolas, Menlo, Monaco, Andale Mono WT, Andale Mono, Lucida Console, Lucida Sans Typewriter, DejaVu Sans Mono, Bitstream Vera Sans Mono, Liberation Mono, Nimbus Mono L, Courier New, Courier, monospace;
+}
+
+/* Theme colors */
+:root {
+	--color-gray-20: #e0e0e0;
+	--color-gray-50: #C0C0C0;
+	--color-gray-90: #333;
+
+	--background-color: #fff;
+
+	--text-color: var(--color-gray-90);
+	--text-color-link: #082840;
+	--text-color-link-active: #5f2b48;
+	--text-color-link-visited: #17050F;
+
+	--syntax-tab-size: 2;
+}
+
+/* Dark mode removed - brutalist design uses cream-based light theme only */
+
+/* Global stylesheet */
+* {
+	box-sizing: border-box;
+}
+
+@view-transition {
+	navigation: auto;
+}
+
+html,
+body {
+	padding: 0;
+	margin: 0 auto;
+	font-family: var(--font-family);
+	color: var(--text-color);
+	background-color: var(--background-color);
+}
+html {
+	overflow-y: scroll;
+}
+body {
+	max-width: 40em;
+}
+
+/* https://www.a11yproject.com/posts/how-to-hide-content/ */
+.visually-hidden:not(:focus):not(:active) {
+	clip: rect(0 0 0 0);
+	clip-path: inset(50%);
+	height: 1px;
+	overflow: hidden;
+	position: absolute;
+	white-space: nowrap;
+	width: 1px;
+}
+
+/* Fluid images via https://www.zachleat.com/web/fluid-images/ */
+img{
+  max-width: 100%;
+}
+img[width][height] {
+  height: auto;
+}
+img[src$=".svg"] {
+  width: 100%;
+  height: auto;
+  max-width: none;
+}
+video,
+iframe {
+	width: 100%;
+	height: auto;
+}
+iframe {
+	aspect-ratio: 16/9;
+}
+
+p:last-child {
+	margin-bottom: 0;
+}
+p {
+	line-height: 1.5;
+}
+
+li {
+	line-height: 1.5;
+}
+
+a[href] {
+	color: var(--text-color-link);
+}
+a[href]:visited {
+	color: var(--text-color-link-visited);
+}
+a[href]:hover,
+a[href]:active {
+	color: var(--text-color-link-active);
+}
+
+main,
+footer {
+	padding: 1rem;
+}
+main :first-child {
+	margin-top: 0;
+}
+
+header {
+	border-bottom: 1px dashed var(--color-gray-20);
+}
+
+/* Skip link styling moved to main.css using Tailwind utilities (.skip-link class) */
+
+.links-nextprev {
+	display: flex;
+	justify-content: space-between;
+	gap: .5em 1em;
+	list-style: "";
+	border-top: 1px dashed var(--color-gray-20);
+	padding: 1em 0;
+}
+.links-nextprev > * {
+	flex-grow: 1;
+}
+.links-nextprev-next {
+	text-align: right;
+}
+
+table {
+	margin: 1em 0;
+}
+table td,
+table th {
+	padding-right: 1em;
+}
+
+pre,
+code {
+	font-family: var(--font-family-monospace);
+}
+pre:not([class*="language-"]) {
+	margin: .5em 0;
+	line-height: 1.375; /* 22px /16 */
+	-moz-tab-size: var(--syntax-tab-size);
+	-o-tab-size: var(--syntax-tab-size);
+	tab-size: var(--syntax-tab-size);
+	-webkit-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+	direction: ltr;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	overflow-x: auto;
+}
+code {
+	word-break: break-all;
+}
+
+/* Header */
+header {
+	display: flex;
+	gap: 1em;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: center;
+	padding: 1em;
+}
+.home-link {
+	flex-grow: 1;
+	font-size: 1em; /* 16px /16 */
+	font-weight: 700;
+}
+.home-link:link:not(:hover) {
+	text-decoration: none;
+}
+
+/* Nav */
+.nav {
+	display: flex;
+	gap: .5em 1em;
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+.nav-item {
+	display: inline-block;
+}
+.nav-item a[href]:not(:hover) {
+	text-decoration: none;
+}
+.nav a[href][aria-current="page"] {
+	text-decoration: underline;
+}
+
+/* Posts list */
+.postlist {
+	counter-reset: start-from var(--postlist-index);
+	list-style: none;
+	padding: 0;
+	padding-left: 1.5rem;
+}
+.postlist-item {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	counter-increment: start-from -1;
+	margin-bottom: 1em;
+}
+.postlist-item:before {
+	display: inline-block;
+	pointer-events: none;
+	content: "" counter(start-from, decimal-leading-zero) ". ";
+	line-height: 100%;
+	text-align: right;
+	margin-left: -1.5rem;
+}
+.postlist-date,
+.postlist-item:before {
+	font-size: 0.8125em; /* 13px /16 */
+	color: var(--color-gray-90);
+}
+.postlist-date {
+	word-spacing: -0.5px;
+}
+.postlist-link {
+	font-size: 1.1875em; /* 19px /16 */
+	font-weight: 700;
+	flex-basis: calc(100% - 1.5rem);
+	padding-left: .25em;
+	padding-right: .5em;
+	text-underline-position: from-font;
+	text-underline-offset: 0;
+	text-decoration-thickness: 1px;
+}
+.postlist-item-active .postlist-link {
+	font-weight: bold;
+}
+
+/* Tags */
+.post-tag {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	text-transform: capitalize;
+	font-style: italic;
+}
+.postlist-item > .post-tag {
+	align-self: center;
+}
+
+/* Tags list */
+.post-metadata {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: .5em;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+.post-metadata time {
+	margin-right: 1em;
+}
+/**
+ * okaidia theme for JavaScript, CSS and HTML
+ * Loosely based on Monokai textmate theme by http://www.monokai.nl/
+ * @author ocodia
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: #f8f8f2;
+	background: none;
+	text-shadow: 0 1px rgba(0, 0, 0, 0.3);
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	font-size: 1em;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+	line-height: 1.5;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+	border-radius: 0.3em;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	background: #272822;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	border-radius: .3em;
+	white-space: normal;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: #8292a2;
+}
+
+.token.punctuation {
+	color: #f8f8f2;
+}
+
+.token.namespace {
+	opacity: .7;
+}
+
+.token.property,
+.token.tag,
+.token.constant,
+.token.symbol,
+.token.deleted {
+	color: #f92672;
+}
+
+.token.boolean,
+.token.number {
+	color: #ae81ff;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+	color: #a6e22e;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string,
+.token.variable {
+	color: #f8f8f2;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.function,
+.token.class-name {
+	color: #e6db74;
+}
+
+.token.keyword {
+	color: #66d9ef;
+}
+
+.token.regex,
+.token.important {
+	color: #fd971f;
+}
+
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
+}
+
+.token.entity {
+	cursor: help;
+}
+/*
+ * New diff- syntax
+ */
+
+pre[class*="language-diff-"] {
+	--eleventy-code-padding: 1.25em;
+	padding-left: var(--eleventy-code-padding);
+	padding-right: var(--eleventy-code-padding);
+}
+.token.deleted {
+	background-color: hsl(0, 51%, 37%);
+	color: inherit;
+}
+.token.inserted {
+	background-color: hsl(126, 31%, 39%);
+	color: inherit;
+}
+
+/* Make the + and - characters unselectable for copy/paste */
+.token.prefix.unchanged,
+.token.prefix.inserted,
+.token.prefix.deleted {
+	-webkit-user-select: none;
+	user-select: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+.token.prefix.inserted,
+.token.prefix.deleted {
+	width: var(--eleventy-code-padding);
+	background-color: rgba(0,0,0,.2);
+}
+
+/* Optional: full-width background color */
+.token.inserted:not(.prefix),
+.token.deleted:not(.prefix) {
+	display: block;
+	margin-left: calc(-1 * var(--eleventy-code-padding));
+	margin-right: calc(-1 * var(--eleventy-code-padding));
+	text-decoration: none; /* override del, ins, mark defaults */
+	color: inherit; /* override del, ins, mark defaults */
+}</style>
+		
+	</head>
+	<body>
+		<a href="#main-content" id="skip-link" class="skip-link">Skip to main content</a>
+
+		<header role="banner">
+			<a href="/" class="home-link">Jay Singh</a>
+			<nav aria-label="Main navigation">
+				<h2 class="visually-hidden" id="top-level-navigation-menu">Top level navigation menu</h2>
+				<ul class="nav">
+					<li class="nav-item"><a href="/">Home</a></li>
+					<li class="nav-item"><a href="/feed/feed.xml">Feed</a></li>
+				</ul>
+			</nav>
+		</header>
+
+		<main id="main-content" tabindex="-1">
+			<heading-anchors>
+				
+
+
+<h1 id="building-event-driven-microservices-with-fastapi">BUILDING EVENT-DRIVEN MICROSERVICES WITH FASTAPI</h1>
+
+<ul class="post-metadata">
+	<li><time datetime="2024-11-01">01 November 2024</time></li>
+	<li><a href="/tags/fastapi/" class="post-tag">fastapi</a>, </li>
+	<li><a href="/tags/python/" class="post-tag">python</a>, </li>
+	<li><a href="/tags/microservices/" class="post-tag">microservices</a>, </li>
+	<li><a href="/tags/architecture/" class="post-tag">architecture</a></li>
+</ul>
+
+<p>Event-driven microservices enable building scalable, maintainable systems that can handle complex business logic while remaining loosely coupled. In this post, I'll share lessons learned from building a production microservices platform serving 5,000+ users.</p>
+<h2 id="why-fastapi-for-microservices">Why FastAPI for Microservices?</h2>
+<p>FastAPI is an excellent choice for microservices due to its async capabilities, automatic OpenAPI documentation, and Pydantic validation. Combined with SQLAlchemy 2.0's async support, you can build high-performance services that handle hundreds of concurrent requests.</p>
+<pre class="language-python" tabindex="0"><code class="language-python"><span class="token keyword">from</span> fastapi <span class="token keyword">import</span> FastAPI
+<span class="token keyword">from</span> pydantic <span class="token keyword">import</span> BaseModel
+
+app <span class="token operator">=</span> FastAPI<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token keyword">class</span> <span class="token class-name">Event</span><span class="token punctuation">(</span>BaseModel<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token builtin">type</span><span class="token punctuation">:</span> <span class="token builtin">str</span>
+    data<span class="token punctuation">:</span> <span class="token builtin">dict</span>
+
+<span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>post</span><span class="token punctuation">(</span><span class="token string">'/events'</span><span class="token punctuation">)</span>
+<span class="token keyword">async</span> <span class="token keyword">def</span> <span class="token function">handle_event</span><span class="token punctuation">(</span>event<span class="token punctuation">:</span> Event<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">return</span> <span class="token punctuation">{</span><span class="token string">'status'</span><span class="token punctuation">:</span> <span class="token string">'processed'</span><span class="token punctuation">}</span></code></pre>
+<h2 id="domain-driven-design-principles">Domain-Driven Design Principles</h2>
+<p>Domain-Driven Design helps organize complex business logic into bounded contexts. Each microservice owns its domain model and communicates with others through well-defined interfaces. This isolation makes testing easier and allows teams to work independently.</p>
+<pre class="language-mermaid" tabindex="0"><code class="language-mermaid"><span class="token keyword">graph</span> TB
+    <span class="token keyword">subgraph</span> Scan Context
+        A<span class="token text string">[Scan Service]</span>
+        B<span class="token text string">[Analytics Engine]</span>
+    <span class="token keyword">end</span>
+    <span class="token keyword">subgraph</span> Student Context
+        C<span class="token text string">[Student Service]</span>
+        D<span class="token text string">[Data Integration]</span>
+    <span class="token keyword">end</span>
+    <span class="token keyword">subgraph</span> Shared
+        E<span class="token text string">[Event Bus]</span>
+        F<span class="token text string">[PostgreSQL]</span>
+    <span class="token keyword">end</span>
+    A <span class="token arrow operator">--></span> E
+    C <span class="token arrow operator">--></span> E
+    E <span class="token arrow operator">--></span> B
+    E <span class="token arrow operator">--></span> D
+    A <span class="token arrow operator">--></span> F
+    C <span class="token arrow operator">--></span> F</code></pre>
+<blockquote>
+<p><strong>Tip:</strong> Use bounded contexts to isolate domains and enable independent team work. Each context should have clear boundaries and well-defined interfaces.</p>
+</blockquote>
+<h2 id="key-architecture-patterns">Key Architecture Patterns</h2>
+<p>Several patterns are essential for building maintainable microservices: Repository pattern for data access, Adapter pattern for external integrations, dependency injection for testability, and CQRS for separating reads from writes. Use domain events to communicate between services rather than tight coupling.</p>
+<h3 id="repository-pattern-implementation">Repository Pattern Implementation</h3>
+<pre class="language-python" tabindex="0"><code class="language-python"><span class="token keyword">from</span> abc <span class="token keyword">import</span> ABC<span class="token punctuation">,</span> abstractmethod
+<span class="token keyword">from</span> sqlalchemy<span class="token punctuation">.</span>ext<span class="token punctuation">.</span>asyncio <span class="token keyword">import</span> AsyncSession
+
+<span class="token keyword">class</span> <span class="token class-name">EventRepository</span><span class="token punctuation">(</span>ABC<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token decorator annotation punctuation">@abstractmethod</span>
+    <span class="token keyword">async</span> <span class="token keyword">def</span> <span class="token function">save</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> event<span class="token punctuation">:</span> Event<span class="token punctuation">)</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token boolean">None</span><span class="token punctuation">:</span>
+        <span class="token keyword">pass</span>
+
+<span class="token keyword">class</span> <span class="token class-name">SQLEventRepository</span><span class="token punctuation">(</span>EventRepository<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">def</span> <span class="token function">__init__</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> session<span class="token punctuation">:</span> AsyncSession<span class="token punctuation">)</span><span class="token punctuation">:</span>
+        self<span class="token punctuation">.</span>session <span class="token operator">=</span> session
+
+    <span class="token keyword">async</span> <span class="token keyword">def</span> <span class="token function">save</span><span class="token punctuation">(</span>self<span class="token punctuation">,</span> event<span class="token punctuation">:</span> Event<span class="token punctuation">)</span> <span class="token operator">-</span><span class="token operator">></span> <span class="token boolean">None</span><span class="token punctuation">:</span>
+        self<span class="token punctuation">.</span>session<span class="token punctuation">.</span>add<span class="token punctuation">(</span>event<span class="token punctuation">)</span>
+        <span class="token keyword">await</span> self<span class="token punctuation">.</span>session<span class="token punctuation">.</span>commit<span class="token punctuation">(</span><span class="token punctuation">)</span></code></pre>
+<h2 id="observability-is-critical">Observability is Critical</h2>
+<p>Instrument your services with Prometheus metrics, structured logging with Structlog, and distributed tracing with OpenTelemetry. This visibility is essential for debugging production issues.</p>
+<blockquote>
+<p><strong>Warning:</strong> Without proper observability, you're flying blind. Always implement metrics, logging, and tracing from day one.</p>
+</blockquote>
+<h2 id="real-world-results">Real-World Results</h2>
+<p>Our QR code platform processes 500+ daily interactions with sub-second response times using these patterns. Proper architecture enables scaling both the system and the team. The event-driven approach allowed us to maintain 99.9% uptime while continuously deploying new features.</p>
+<blockquote>
+<p><strong>Important:</strong> Start with a solid architecture from the beginning. Refactoring a monolith into microservices is exponentially harder than building it right from day one.</p>
+</blockquote>
+
+<ul class="links-nextprev"><li class="links-nextprev-prev">← Previous<br> <a href="/blog/oauth2-authentication-gateway/">IMPLEMENTING ZERO-TRUST AUTHENTICATION WITH OAUTH2-PROXY</a></li>
+</ul>
+
+			</heading-anchors>
+		</main>
+
+		<footer role="contentinfo">
+			<p>
+				<em>Built with <a href="https://www.11ty.dev/">Eleventy v3.1.2</a></em>
+			</p>
+		</footer>
+
+		<!-- This page `/blog/building-fastapi-microservices/` was built on 2026-01-29T15:21:09.640Z -->
+		<script type="module" src="/dist/cC8wS6ZjFU.js"></script>
+	</body>
+</html>

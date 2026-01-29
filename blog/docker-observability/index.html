@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>COMPREHENSIVE OBSERVABILITY FOR DOCKER MICROSERVICES</title>
+		<meta name="description" content="Jay Singh&#39;s portfolio - Software Engineer">
+		<link rel="alternate" href="/feed/feed.xml" type="application/atom+xml" title="Jay Singh">
+		
+		
+		<link rel="stylesheet" href="/css/main.css">
+		
+		<style>/* This is an arbitrary CSS string added to the bundle */
+/* Defaults */
+:root {
+	--font-family: -apple-system, system-ui, sans-serif;
+	--font-family-monospace: Consolas, Menlo, Monaco, Andale Mono WT, Andale Mono, Lucida Console, Lucida Sans Typewriter, DejaVu Sans Mono, Bitstream Vera Sans Mono, Liberation Mono, Nimbus Mono L, Courier New, Courier, monospace;
+}
+
+/* Theme colors */
+:root {
+	--color-gray-20: #e0e0e0;
+	--color-gray-50: #C0C0C0;
+	--color-gray-90: #333;
+
+	--background-color: #fff;
+
+	--text-color: var(--color-gray-90);
+	--text-color-link: #082840;
+	--text-color-link-active: #5f2b48;
+	--text-color-link-visited: #17050F;
+
+	--syntax-tab-size: 2;
+}
+
+/* Dark mode removed - brutalist design uses cream-based light theme only */
+
+/* Global stylesheet */
+* {
+	box-sizing: border-box;
+}
+
+@view-transition {
+	navigation: auto;
+}
+
+html,
+body {
+	padding: 0;
+	margin: 0 auto;
+	font-family: var(--font-family);
+	color: var(--text-color);
+	background-color: var(--background-color);
+}
+html {
+	overflow-y: scroll;
+}
+body {
+	max-width: 40em;
+}
+
+/* https://www.a11yproject.com/posts/how-to-hide-content/ */
+.visually-hidden:not(:focus):not(:active) {
+	clip: rect(0 0 0 0);
+	clip-path: inset(50%);
+	height: 1px;
+	overflow: hidden;
+	position: absolute;
+	white-space: nowrap;
+	width: 1px;
+}
+
+/* Fluid images via https://www.zachleat.com/web/fluid-images/ */
+img{
+  max-width: 100%;
+}
+img[width][height] {
+  height: auto;
+}
+img[src$=".svg"] {
+  width: 100%;
+  height: auto;
+  max-width: none;
+}
+video,
+iframe {
+	width: 100%;
+	height: auto;
+}
+iframe {
+	aspect-ratio: 16/9;
+}
+
+p:last-child {
+	margin-bottom: 0;
+}
+p {
+	line-height: 1.5;
+}
+
+li {
+	line-height: 1.5;
+}
+
+a[href] {
+	color: var(--text-color-link);
+}
+a[href]:visited {
+	color: var(--text-color-link-visited);
+}
+a[href]:hover,
+a[href]:active {
+	color: var(--text-color-link-active);
+}
+
+main,
+footer {
+	padding: 1rem;
+}
+main :first-child {
+	margin-top: 0;
+}
+
+header {
+	border-bottom: 1px dashed var(--color-gray-20);
+}
+
+/* Skip link styling moved to main.css using Tailwind utilities (.skip-link class) */
+
+.links-nextprev {
+	display: flex;
+	justify-content: space-between;
+	gap: .5em 1em;
+	list-style: "";
+	border-top: 1px dashed var(--color-gray-20);
+	padding: 1em 0;
+}
+.links-nextprev > * {
+	flex-grow: 1;
+}
+.links-nextprev-next {
+	text-align: right;
+}
+
+table {
+	margin: 1em 0;
+}
+table td,
+table th {
+	padding-right: 1em;
+}
+
+pre,
+code {
+	font-family: var(--font-family-monospace);
+}
+pre:not([class*="language-"]) {
+	margin: .5em 0;
+	line-height: 1.375; /* 22px /16 */
+	-moz-tab-size: var(--syntax-tab-size);
+	-o-tab-size: var(--syntax-tab-size);
+	tab-size: var(--syntax-tab-size);
+	-webkit-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+	direction: ltr;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	overflow-x: auto;
+}
+code {
+	word-break: break-all;
+}
+
+/* Header */
+header {
+	display: flex;
+	gap: 1em;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: center;
+	padding: 1em;
+}
+.home-link {
+	flex-grow: 1;
+	font-size: 1em; /* 16px /16 */
+	font-weight: 700;
+}
+.home-link:link:not(:hover) {
+	text-decoration: none;
+}
+
+/* Nav */
+.nav {
+	display: flex;
+	gap: .5em 1em;
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+.nav-item {
+	display: inline-block;
+}
+.nav-item a[href]:not(:hover) {
+	text-decoration: none;
+}
+.nav a[href][aria-current="page"] {
+	text-decoration: underline;
+}
+
+/* Posts list */
+.postlist {
+	counter-reset: start-from var(--postlist-index);
+	list-style: none;
+	padding: 0;
+	padding-left: 1.5rem;
+}
+.postlist-item {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	counter-increment: start-from -1;
+	margin-bottom: 1em;
+}
+.postlist-item:before {
+	display: inline-block;
+	pointer-events: none;
+	content: "" counter(start-from, decimal-leading-zero) ". ";
+	line-height: 100%;
+	text-align: right;
+	margin-left: -1.5rem;
+}
+.postlist-date,
+.postlist-item:before {
+	font-size: 0.8125em; /* 13px /16 */
+	color: var(--color-gray-90);
+}
+.postlist-date {
+	word-spacing: -0.5px;
+}
+.postlist-link {
+	font-size: 1.1875em; /* 19px /16 */
+	font-weight: 700;
+	flex-basis: calc(100% - 1.5rem);
+	padding-left: .25em;
+	padding-right: .5em;
+	text-underline-position: from-font;
+	text-underline-offset: 0;
+	text-decoration-thickness: 1px;
+}
+.postlist-item-active .postlist-link {
+	font-weight: bold;
+}
+
+/* Tags */
+.post-tag {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	text-transform: capitalize;
+	font-style: italic;
+}
+.postlist-item > .post-tag {
+	align-self: center;
+}
+
+/* Tags list */
+.post-metadata {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: .5em;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+.post-metadata time {
+	margin-right: 1em;
+}
+/**
+ * okaidia theme for JavaScript, CSS and HTML
+ * Loosely based on Monokai textmate theme by http://www.monokai.nl/
+ * @author ocodia
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: #f8f8f2;
+	background: none;
+	text-shadow: 0 1px rgba(0, 0, 0, 0.3);
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	font-size: 1em;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+	line-height: 1.5;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+	border-radius: 0.3em;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	background: #272822;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	border-radius: .3em;
+	white-space: normal;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: #8292a2;
+}
+
+.token.punctuation {
+	color: #f8f8f2;
+}
+
+.token.namespace {
+	opacity: .7;
+}
+
+.token.property,
+.token.tag,
+.token.constant,
+.token.symbol,
+.token.deleted {
+	color: #f92672;
+}
+
+.token.boolean,
+.token.number {
+	color: #ae81ff;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+	color: #a6e22e;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string,
+.token.variable {
+	color: #f8f8f2;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.function,
+.token.class-name {
+	color: #e6db74;
+}
+
+.token.keyword {
+	color: #66d9ef;
+}
+
+.token.regex,
+.token.important {
+	color: #fd971f;
+}
+
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
+}
+
+.token.entity {
+	cursor: help;
+}
+/*
+ * New diff- syntax
+ */
+
+pre[class*="language-diff-"] {
+	--eleventy-code-padding: 1.25em;
+	padding-left: var(--eleventy-code-padding);
+	padding-right: var(--eleventy-code-padding);
+}
+.token.deleted {
+	background-color: hsl(0, 51%, 37%);
+	color: inherit;
+}
+.token.inserted {
+	background-color: hsl(126, 31%, 39%);
+	color: inherit;
+}
+
+/* Make the + and - characters unselectable for copy/paste */
+.token.prefix.unchanged,
+.token.prefix.inserted,
+.token.prefix.deleted {
+	-webkit-user-select: none;
+	user-select: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+.token.prefix.inserted,
+.token.prefix.deleted {
+	width: var(--eleventy-code-padding);
+	background-color: rgba(0,0,0,.2);
+}
+
+/* Optional: full-width background color */
+.token.inserted:not(.prefix),
+.token.deleted:not(.prefix) {
+	display: block;
+	margin-left: calc(-1 * var(--eleventy-code-padding));
+	margin-right: calc(-1 * var(--eleventy-code-padding));
+	text-decoration: none; /* override del, ins, mark defaults */
+	color: inherit; /* override del, ins, mark defaults */
+}</style>
+		
+	</head>
+	<body>
+		<a href="#main-content" id="skip-link" class="skip-link">Skip to main content</a>
+
+		<header role="banner">
+			<a href="/" class="home-link">Jay Singh</a>
+			<nav aria-label="Main navigation">
+				<h2 class="visually-hidden" id="top-level-navigation-menu">Top level navigation menu</h2>
+				<ul class="nav">
+					<li class="nav-item"><a href="/">Home</a></li>
+					<li class="nav-item"><a href="/feed/feed.xml">Feed</a></li>
+				</ul>
+			</nav>
+		</header>
+
+		<main id="main-content" tabindex="-1">
+			<heading-anchors>
+				
+
+
+<h1 id="comprehensive-observability-for-docker-microservices">COMPREHENSIVE OBSERVABILITY FOR DOCKER MICROSERVICES</h1>
+
+<ul class="post-metadata">
+	<li><time datetime="2024-09-22">22 September 2024</time></li>
+	<li><a href="/tags/docker/" class="post-tag">docker</a>, </li>
+	<li><a href="/tags/prometheus/" class="post-tag">prometheus</a>, </li>
+	<li><a href="/tags/grafana/" class="post-tag">grafana</a>, </li>
+	<li><a href="/tags/observability/" class="post-tag">observability</a></li>
+</ul>
+
+<p>You can't fix what you can't see. Observability is essential for running production microservices. Here's how we built comprehensive monitoring infrastructure that provides visibility into every layer of our stack serving 5,000+ users.</p>
+<blockquote>
+<p><strong>Warning:</strong> Observability is not optional. Without it, you're flying blind in production. Instrument from day one, not after the first incident.</p>
+</blockquote>
+<h2 id="the-three-pillars-of-observability">The Three Pillars of Observability</h2>
+<p>Complete observability requires three complementary approaches: metrics with Prometheus, logs with Grafana Loki, and traces with OpenTelemetry. Each provides different insights, and together they give you complete visibility into system behavior.</p>
+<pre class="language-mermaid" tabindex="0"><code class="language-mermaid"><span class="token keyword">graph</span> TB
+    <span class="token keyword">subgraph</span> Applications
+        A<span class="token text string">[FastAPI Service 1]</span>
+        B<span class="token text string">[FastAPI Service 2]</span>
+        C<span class="token text string">[FastAPI Service N]</span>
+    <span class="token keyword">end</span>
+    <span class="token keyword">subgraph</span> Metrics
+        D<span class="token text string">[Prometheus]</span>
+        E<span class="token text string">[Grafana]</span>
+    <span class="token keyword">end</span>
+    <span class="token keyword">subgraph</span> Logs
+        F<span class="token text string">[Promtail]</span>
+        G<span class="token text string">[Loki]</span>
+    <span class="token keyword">end</span>
+    <span class="token keyword">subgraph</span> Traces
+        H<span class="token text string">[OpenTelemetry Collector]</span>
+        I<span class="token text string">[Tempo]</span>
+    <span class="token keyword">end</span>
+    A <span class="token arrow operator">--></span> D
+    B <span class="token arrow operator">--></span> D
+    C <span class="token arrow operator">--></span> D
+    A <span class="token arrow operator">--></span> F
+    B <span class="token arrow operator">--></span> F
+    C <span class="token arrow operator">--></span> F
+    A <span class="token arrow operator">--></span> H
+    B <span class="token arrow operator">--></span> H
+    C <span class="token arrow operator">--></span> H
+    D <span class="token arrow operator">--></span> E
+    F <span class="token arrow operator">--></span> G
+    G <span class="token arrow operator">--></span> E
+    H <span class="token arrow operator">--></span> I
+    I <span class="token arrow operator">--></span> E</code></pre>
+<h2 id="metrics-with-prometheus">Metrics with Prometheus</h2>
+<p>Prometheus collects time-series metrics from all services. Instrument your FastAPI applications with prometheus-client to expose custom metrics that matter to your business and operations.</p>
+<pre class="language-python" tabindex="0"><code class="language-python"><span class="token keyword">from</span> prometheus_client <span class="token keyword">import</span> Counter<span class="token punctuation">,</span> Histogram<span class="token punctuation">,</span> generate_latest
+<span class="token keyword">from</span> fastapi <span class="token keyword">import</span> FastAPI<span class="token punctuation">,</span> Response
+<span class="token keyword">import</span> time
+
+app <span class="token operator">=</span> FastAPI<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+request_count <span class="token operator">=</span> Counter<span class="token punctuation">(</span>
+    <span class="token string">'http_requests_total'</span><span class="token punctuation">,</span>
+    <span class="token string">'Total HTTP requests'</span><span class="token punctuation">,</span>
+    <span class="token punctuation">[</span><span class="token string">'method'</span><span class="token punctuation">,</span> <span class="token string">'endpoint'</span><span class="token punctuation">,</span> <span class="token string">'status'</span><span class="token punctuation">]</span>
+<span class="token punctuation">)</span>
+
+request_duration <span class="token operator">=</span> Histogram<span class="token punctuation">(</span>
+    <span class="token string">'http_request_duration_seconds'</span><span class="token punctuation">,</span>
+    <span class="token string">'HTTP request latency'</span><span class="token punctuation">,</span>
+    <span class="token punctuation">[</span><span class="token string">'method'</span><span class="token punctuation">,</span> <span class="token string">'endpoint'</span><span class="token punctuation">]</span>
+<span class="token punctuation">)</span>
+
+<span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>middleware</span><span class="token punctuation">(</span><span class="token string">'http'</span><span class="token punctuation">)</span>
+<span class="token keyword">async</span> <span class="token keyword">def</span> <span class="token function">prometheus_middleware</span><span class="token punctuation">(</span>request<span class="token punctuation">,</span> call_next<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    start <span class="token operator">=</span> time<span class="token punctuation">.</span>time<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    response <span class="token operator">=</span> <span class="token keyword">await</span> call_next<span class="token punctuation">(</span>request<span class="token punctuation">)</span>
+    duration <span class="token operator">=</span> time<span class="token punctuation">.</span>time<span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> start
+
+    request_count<span class="token punctuation">.</span>labels<span class="token punctuation">(</span>
+        method<span class="token operator">=</span>request<span class="token punctuation">.</span>method<span class="token punctuation">,</span>
+        endpoint<span class="token operator">=</span>request<span class="token punctuation">.</span>url<span class="token punctuation">.</span>path<span class="token punctuation">,</span>
+        status<span class="token operator">=</span>response<span class="token punctuation">.</span>status_code
+    <span class="token punctuation">)</span><span class="token punctuation">.</span>inc<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+    request_duration<span class="token punctuation">.</span>labels<span class="token punctuation">(</span>
+        method<span class="token operator">=</span>request<span class="token punctuation">.</span>method<span class="token punctuation">,</span>
+        endpoint<span class="token operator">=</span>request<span class="token punctuation">.</span>url<span class="token punctuation">.</span>path
+    <span class="token punctuation">)</span><span class="token punctuation">.</span>observe<span class="token punctuation">(</span>duration<span class="token punctuation">)</span>
+
+    <span class="token keyword">return</span> response
+
+<span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>get</span><span class="token punctuation">(</span><span class="token string">'/metrics'</span><span class="token punctuation">)</span>
+<span class="token keyword">def</span> <span class="token function">metrics</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">return</span> Response<span class="token punctuation">(</span>content<span class="token operator">=</span>generate_latest<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> media_type<span class="token operator">=</span><span class="token string">'text/plain'</span><span class="token punctuation">)</span></code></pre>
+<p>Track what matters: request rates, error rates, latency percentiles (p50, p95, p99), business metrics like scans processed, and resource utilization (CPU, memory, connections). Create dashboards in Grafana to visualize trends and set alerts for anomalies.</p>
+<h2 id="logs-with-grafana-loki">Logs with Grafana Loki</h2>
+<p>Grafana Loki aggregates logs from all containers using Promtail. Use structured logging with Structlog to make logs searchable and correlatable. Include request IDs to trace requests across services.</p>
+<pre class="language-python" tabindex="0"><code class="language-python"><span class="token keyword">import</span> structlog
+<span class="token keyword">import</span> uuid
+<span class="token keyword">from</span> fastapi <span class="token keyword">import</span> Request
+
+structlog<span class="token punctuation">.</span>configure<span class="token punctuation">(</span>
+    processors<span class="token operator">=</span><span class="token punctuation">[</span>
+        structlog<span class="token punctuation">.</span>processors<span class="token punctuation">.</span>TimeStamper<span class="token punctuation">(</span>fmt<span class="token operator">=</span><span class="token string">'iso'</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+        structlog<span class="token punctuation">.</span>stdlib<span class="token punctuation">.</span>add_log_level<span class="token punctuation">,</span>
+        structlog<span class="token punctuation">.</span>processors<span class="token punctuation">.</span>JSONRenderer<span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+    wrapper_class<span class="token operator">=</span>structlog<span class="token punctuation">.</span>stdlib<span class="token punctuation">.</span>BoundLogger<span class="token punctuation">,</span>
+    logger_factory<span class="token operator">=</span>structlog<span class="token punctuation">.</span>stdlib<span class="token punctuation">.</span>LoggerFactory<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+<span class="token punctuation">)</span>
+
+logger <span class="token operator">=</span> structlog<span class="token punctuation">.</span>get_logger<span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+<span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>middleware</span><span class="token punctuation">(</span><span class="token string">'http'</span><span class="token punctuation">)</span>
+<span class="token keyword">async</span> <span class="token keyword">def</span> <span class="token function">logging_middleware</span><span class="token punctuation">(</span>request<span class="token punctuation">:</span> Request<span class="token punctuation">,</span> call_next<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    request_id <span class="token operator">=</span> <span class="token builtin">str</span><span class="token punctuation">(</span>uuid<span class="token punctuation">.</span>uuid4<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+    request<span class="token punctuation">.</span>state<span class="token punctuation">.</span>request_id <span class="token operator">=</span> request_id
+
+    logger<span class="token punctuation">.</span>info<span class="token punctuation">(</span>
+        <span class="token string">'request_started'</span><span class="token punctuation">,</span>
+        request_id<span class="token operator">=</span>request_id<span class="token punctuation">,</span>
+        method<span class="token operator">=</span>request<span class="token punctuation">.</span>method<span class="token punctuation">,</span>
+        path<span class="token operator">=</span>request<span class="token punctuation">.</span>url<span class="token punctuation">.</span>path<span class="token punctuation">,</span>
+        client<span class="token operator">=</span>request<span class="token punctuation">.</span>client<span class="token punctuation">.</span>host
+    <span class="token punctuation">)</span>
+
+    response <span class="token operator">=</span> <span class="token keyword">await</span> call_next<span class="token punctuation">(</span>request<span class="token punctuation">)</span>
+
+    logger<span class="token punctuation">.</span>info<span class="token punctuation">(</span>
+        <span class="token string">'request_completed'</span><span class="token punctuation">,</span>
+        request_id<span class="token operator">=</span>request_id<span class="token punctuation">,</span>
+        status_code<span class="token operator">=</span>response<span class="token punctuation">.</span>status_code
+    <span class="token punctuation">)</span>
+
+    <span class="token keyword">return</span> response</code></pre>
+<blockquote>
+<p><strong>Tip:</strong> Structured logging is a game-changer. JSON logs are searchable, parseable, and correlatable. Never go back to parsing text logs.</p>
+</blockquote>
+<h2 id="traces-with-opentelemetry">Traces with OpenTelemetry</h2>
+<p>OpenTelemetry provides distributed tracing. See exactly how requests flow through your microservices, identify bottlenecks, and understand dependencies. The automatic instrumentation for FastAPI makes adoption straightforward.</p>
+<pre class="language-python" tabindex="0"><code class="language-python"><span class="token keyword">from</span> opentelemetry <span class="token keyword">import</span> trace
+<span class="token keyword">from</span> opentelemetry<span class="token punctuation">.</span>instrumentation<span class="token punctuation">.</span>fastapi <span class="token keyword">import</span> FastAPIInstrumentor
+<span class="token keyword">from</span> opentelemetry<span class="token punctuation">.</span>sdk<span class="token punctuation">.</span>trace <span class="token keyword">import</span> TracerProvider
+<span class="token keyword">from</span> opentelemetry<span class="token punctuation">.</span>sdk<span class="token punctuation">.</span>trace<span class="token punctuation">.</span>export <span class="token keyword">import</span> BatchSpanProcessor
+<span class="token keyword">from</span> opentelemetry<span class="token punctuation">.</span>exporter<span class="token punctuation">.</span>otlp<span class="token punctuation">.</span>proto<span class="token punctuation">.</span>grpc<span class="token punctuation">.</span>trace_exporter <span class="token keyword">import</span> OTLPSpanExporter
+
+trace<span class="token punctuation">.</span>set_tracer_provider<span class="token punctuation">(</span>TracerProvider<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+tracer <span class="token operator">=</span> trace<span class="token punctuation">.</span>get_tracer<span class="token punctuation">(</span>__name__<span class="token punctuation">)</span>
+
+otlp_exporter <span class="token operator">=</span> OTLPSpanExporter<span class="token punctuation">(</span>
+    endpoint<span class="token operator">=</span><span class="token string">'http://otel-collector:4317'</span><span class="token punctuation">,</span>
+    insecure<span class="token operator">=</span><span class="token boolean">True</span>
+<span class="token punctuation">)</span>
+trace<span class="token punctuation">.</span>get_tracer_provider<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span>add_span_processor<span class="token punctuation">(</span>
+    BatchSpanProcessor<span class="token punctuation">(</span>otlp_exporter<span class="token punctuation">)</span>
+<span class="token punctuation">)</span>
+
+FastAPIInstrumentor<span class="token punctuation">.</span>instrument_app<span class="token punctuation">(</span>app<span class="token punctuation">)</span>
+
+<span class="token decorator annotation punctuation">@app<span class="token punctuation">.</span>post</span><span class="token punctuation">(</span><span class="token string">'/process'</span><span class="token punctuation">)</span>
+<span class="token keyword">async</span> <span class="token keyword">def</span> <span class="token function">process_data</span><span class="token punctuation">(</span>data<span class="token punctuation">:</span> <span class="token builtin">dict</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    <span class="token keyword">with</span> tracer<span class="token punctuation">.</span>start_as_current_span<span class="token punctuation">(</span><span class="token string">'validate_data'</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">pass</span>
+
+    <span class="token keyword">with</span> tracer<span class="token punctuation">.</span>start_as_current_span<span class="token punctuation">(</span><span class="token string">'save_to_database'</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+        <span class="token keyword">pass</span>
+
+    <span class="token keyword">return</span> <span class="token punctuation">{</span><span class="token string">'status'</span><span class="token punctuation">:</span> <span class="token string">'processed'</span><span class="token punctuation">}</span></code></pre>
+<h2 id="docker-compose-setup">Docker Compose Setup</h2>
+<p>Deploy the complete monitoring stack with Docker Compose. This setup runs alongside your microservices and collects data automatically.</p>
+<pre class="language-yaml" tabindex="0"><code class="language-yaml"><span class="token key atrule">version</span><span class="token punctuation">:</span> <span class="token string">'3.8'</span>
+
+<span class="token key atrule">services</span><span class="token punctuation">:</span>
+  <span class="token key atrule">prometheus</span><span class="token punctuation">:</span>
+    <span class="token key atrule">image</span><span class="token punctuation">:</span> prom/prometheus<span class="token punctuation">:</span>latest
+    <span class="token key atrule">volumes</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> ./prometheus.yml<span class="token punctuation">:</span>/etc/prometheus/prometheus.yml
+      <span class="token punctuation">-</span> prometheus<span class="token punctuation">-</span>data<span class="token punctuation">:</span>/prometheus
+    <span class="token key atrule">ports</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token string">'9090:9090'</span>
+    <span class="token key atrule">command</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token string">'--config.file=/etc/prometheus/prometheus.yml'</span>
+      <span class="token punctuation">-</span> <span class="token string">'--storage.tsdb.retention.time=30d'</span>
+
+  <span class="token key atrule">grafana</span><span class="token punctuation">:</span>
+    <span class="token key atrule">image</span><span class="token punctuation">:</span> grafana/grafana<span class="token punctuation">:</span>latest
+    <span class="token key atrule">volumes</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> grafana<span class="token punctuation">-</span>data<span class="token punctuation">:</span>/var/lib/grafana
+      <span class="token punctuation">-</span> ./grafana/dashboards<span class="token punctuation">:</span>/etc/grafana/provisioning/dashboards
+    <span class="token key atrule">ports</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token string">'3000:3000'</span>
+    <span class="token key atrule">environment</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> GF_SECURITY_ADMIN_PASSWORD=admin
+
+  <span class="token key atrule">loki</span><span class="token punctuation">:</span>
+    <span class="token key atrule">image</span><span class="token punctuation">:</span> grafana/loki<span class="token punctuation">:</span>latest
+    <span class="token key atrule">ports</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token string">'3100:3100'</span>
+    <span class="token key atrule">volumes</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> loki<span class="token punctuation">-</span>data<span class="token punctuation">:</span>/loki
+
+  <span class="token key atrule">promtail</span><span class="token punctuation">:</span>
+    <span class="token key atrule">image</span><span class="token punctuation">:</span> grafana/promtail<span class="token punctuation">:</span>latest
+    <span class="token key atrule">volumes</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> /var/lib/docker/containers<span class="token punctuation">:</span>/var/lib/docker/containers<span class="token punctuation">:</span>ro
+      <span class="token punctuation">-</span> ./promtail.yml<span class="token punctuation">:</span>/etc/promtail/config.yml
+    <span class="token key atrule">command</span><span class="token punctuation">:</span> <span class="token punctuation">-</span>config.file=/etc/promtail/config.yml
+
+<span class="token key atrule">volumes</span><span class="token punctuation">:</span>
+  <span class="token key atrule">prometheus-data</span><span class="token punctuation">:</span>
+  <span class="token key atrule">grafana-data</span><span class="token punctuation">:</span>
+  <span class="token key atrule">loki-data</span><span class="token punctuation">:</span></code></pre>
+<h2 id="creating-effective-dashboards">Creating Effective Dashboards</h2>
+<p>Build Grafana dashboards that tell a story. Start with high-level metrics (request rate, error rate, latency) then drill down into service-specific details. Use variables to filter by service, environment, or time range.</p>
+<blockquote>
+<p><strong>Important:</strong> The RED method: Rate, Errors, Duration. These three metrics give you 80% of what you need to know about service health.</p>
+</blockquote>
+<h2 id="alerting-rules">Alerting Rules</h2>
+<p>Set up Prometheus alerting rules for critical conditions. Alert on symptoms (user-facing issues) not causes. Group related alerts to avoid alert fatigue.</p>
+<pre class="language-yaml" tabindex="0"><code class="language-yaml"><span class="token key atrule">groups</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> api_alerts
+    <span class="token key atrule">rules</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">alert</span><span class="token punctuation">:</span> HighErrorRate
+        <span class="token key atrule">expr</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
+          rate(http_requests_total{status=~"5.."}[5m])
+          / rate(http_requests_total[5m]) > 0.05</span>
+        <span class="token key atrule">for</span><span class="token punctuation">:</span> 5m
+        <span class="token key atrule">labels</span><span class="token punctuation">:</span>
+          <span class="token key atrule">severity</span><span class="token punctuation">:</span> critical
+        <span class="token key atrule">annotations</span><span class="token punctuation">:</span>
+          <span class="token key atrule">summary</span><span class="token punctuation">:</span> <span class="token string">"High error rate detected"</span>
+          <span class="token key atrule">description</span><span class="token punctuation">:</span> <span class="token string">"Error rate is {{ $value | humanizePercentage }}"</span>
+
+      <span class="token punctuation">-</span> <span class="token key atrule">alert</span><span class="token punctuation">:</span> HighLatency
+        <span class="token key atrule">expr</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
+          histogram_quantile(0.95,
+            rate(http_request_duration_seconds_bucket[5m])
+          ) > 1</span>
+        <span class="token key atrule">for</span><span class="token punctuation">:</span> 10m
+        <span class="token key atrule">labels</span><span class="token punctuation">:</span>
+          <span class="token key atrule">severity</span><span class="token punctuation">:</span> warning
+        <span class="token key atrule">annotations</span><span class="token punctuation">:</span>
+          <span class="token key atrule">summary</span><span class="token punctuation">:</span> <span class="token string">"High request latency"</span>
+          <span class="token key atrule">description</span><span class="token punctuation">:</span> <span class="token string">"P95 latency is {{ $value }}s"</span></code></pre>
+<h2 id="real-world-results">Real-World Results</h2>
+<p>Our 11-service architecture processes 500+ daily interactions across 11+ database tables. With proper observability, we maintain 99.9% uptime and can debug issues in minutes instead of hours. When problems occur, we have the data to understand exactly what happened and why.</p>
+<blockquote>
+<p><strong>Tip:</strong> Observability paid for itself the first time we used it to debug a production issue. What would have taken hours was resolved in 10 minutes.</p>
+</blockquote>
+<p>The key is making observability a first-class concern from the start. Instrument your code, deploy the monitoring stack, create dashboards, and set up alerts. Your future self will thank you when the 3 AM page comes in and you can quickly identify and resolve the issue.</p>
+
+<ul class="links-nextprev"><li class="links-nextprev-prev">← Previous<br> <a href="/blog/postgresql-performance/">POSTGRESQL PERFORMANCE OPTIMIZATION FOR HIGH-TRAFFIC APPLICATIONS</a></li><li class="links-nextprev-next">Next →<br><a href="/blog/oauth2-authentication-gateway/">IMPLEMENTING ZERO-TRUST AUTHENTICATION WITH OAUTH2-PROXY</a></li>
+</ul>
+
+			</heading-anchors>
+		</main>
+
+		<footer role="contentinfo">
+			<p>
+				<em>Built with <a href="https://www.11ty.dev/">Eleventy v3.1.2</a></em>
+			</p>
+		</footer>
+
+		<!-- This page `/blog/docker-observability/` was built on 2026-01-29T15:21:09.640Z -->
+		<script type="module" src="/dist/cC8wS6ZjFU.js"></script>
+	</body>
+</html>

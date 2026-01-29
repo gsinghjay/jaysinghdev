@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>CI/CD BEST PRACTICES WITH GITHUB ACTIONS</title>
+		<meta name="description" content="Jay Singh&#39;s portfolio - Software Engineer">
+		<link rel="alternate" href="/feed/feed.xml" type="application/atom+xml" title="Jay Singh">
+		
+		
+		<link rel="stylesheet" href="/css/main.css">
+		
+		<style>/* This is an arbitrary CSS string added to the bundle */
+/* Defaults */
+:root {
+	--font-family: -apple-system, system-ui, sans-serif;
+	--font-family-monospace: Consolas, Menlo, Monaco, Andale Mono WT, Andale Mono, Lucida Console, Lucida Sans Typewriter, DejaVu Sans Mono, Bitstream Vera Sans Mono, Liberation Mono, Nimbus Mono L, Courier New, Courier, monospace;
+}
+
+/* Theme colors */
+:root {
+	--color-gray-20: #e0e0e0;
+	--color-gray-50: #C0C0C0;
+	--color-gray-90: #333;
+
+	--background-color: #fff;
+
+	--text-color: var(--color-gray-90);
+	--text-color-link: #082840;
+	--text-color-link-active: #5f2b48;
+	--text-color-link-visited: #17050F;
+
+	--syntax-tab-size: 2;
+}
+
+/* Dark mode removed - brutalist design uses cream-based light theme only */
+
+/* Global stylesheet */
+* {
+	box-sizing: border-box;
+}
+
+@view-transition {
+	navigation: auto;
+}
+
+html,
+body {
+	padding: 0;
+	margin: 0 auto;
+	font-family: var(--font-family);
+	color: var(--text-color);
+	background-color: var(--background-color);
+}
+html {
+	overflow-y: scroll;
+}
+body {
+	max-width: 40em;
+}
+
+/* https://www.a11yproject.com/posts/how-to-hide-content/ */
+.visually-hidden:not(:focus):not(:active) {
+	clip: rect(0 0 0 0);
+	clip-path: inset(50%);
+	height: 1px;
+	overflow: hidden;
+	position: absolute;
+	white-space: nowrap;
+	width: 1px;
+}
+
+/* Fluid images via https://www.zachleat.com/web/fluid-images/ */
+img{
+  max-width: 100%;
+}
+img[width][height] {
+  height: auto;
+}
+img[src$=".svg"] {
+  width: 100%;
+  height: auto;
+  max-width: none;
+}
+video,
+iframe {
+	width: 100%;
+	height: auto;
+}
+iframe {
+	aspect-ratio: 16/9;
+}
+
+p:last-child {
+	margin-bottom: 0;
+}
+p {
+	line-height: 1.5;
+}
+
+li {
+	line-height: 1.5;
+}
+
+a[href] {
+	color: var(--text-color-link);
+}
+a[href]:visited {
+	color: var(--text-color-link-visited);
+}
+a[href]:hover,
+a[href]:active {
+	color: var(--text-color-link-active);
+}
+
+main,
+footer {
+	padding: 1rem;
+}
+main :first-child {
+	margin-top: 0;
+}
+
+header {
+	border-bottom: 1px dashed var(--color-gray-20);
+}
+
+/* Skip link styling moved to main.css using Tailwind utilities (.skip-link class) */
+
+.links-nextprev {
+	display: flex;
+	justify-content: space-between;
+	gap: .5em 1em;
+	list-style: "";
+	border-top: 1px dashed var(--color-gray-20);
+	padding: 1em 0;
+}
+.links-nextprev > * {
+	flex-grow: 1;
+}
+.links-nextprev-next {
+	text-align: right;
+}
+
+table {
+	margin: 1em 0;
+}
+table td,
+table th {
+	padding-right: 1em;
+}
+
+pre,
+code {
+	font-family: var(--font-family-monospace);
+}
+pre:not([class*="language-"]) {
+	margin: .5em 0;
+	line-height: 1.375; /* 22px /16 */
+	-moz-tab-size: var(--syntax-tab-size);
+	-o-tab-size: var(--syntax-tab-size);
+	tab-size: var(--syntax-tab-size);
+	-webkit-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+	direction: ltr;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	overflow-x: auto;
+}
+code {
+	word-break: break-all;
+}
+
+/* Header */
+header {
+	display: flex;
+	gap: 1em;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: center;
+	padding: 1em;
+}
+.home-link {
+	flex-grow: 1;
+	font-size: 1em; /* 16px /16 */
+	font-weight: 700;
+}
+.home-link:link:not(:hover) {
+	text-decoration: none;
+}
+
+/* Nav */
+.nav {
+	display: flex;
+	gap: .5em 1em;
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+.nav-item {
+	display: inline-block;
+}
+.nav-item a[href]:not(:hover) {
+	text-decoration: none;
+}
+.nav a[href][aria-current="page"] {
+	text-decoration: underline;
+}
+
+/* Posts list */
+.postlist {
+	counter-reset: start-from var(--postlist-index);
+	list-style: none;
+	padding: 0;
+	padding-left: 1.5rem;
+}
+.postlist-item {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	counter-increment: start-from -1;
+	margin-bottom: 1em;
+}
+.postlist-item:before {
+	display: inline-block;
+	pointer-events: none;
+	content: "" counter(start-from, decimal-leading-zero) ". ";
+	line-height: 100%;
+	text-align: right;
+	margin-left: -1.5rem;
+}
+.postlist-date,
+.postlist-item:before {
+	font-size: 0.8125em; /* 13px /16 */
+	color: var(--color-gray-90);
+}
+.postlist-date {
+	word-spacing: -0.5px;
+}
+.postlist-link {
+	font-size: 1.1875em; /* 19px /16 */
+	font-weight: 700;
+	flex-basis: calc(100% - 1.5rem);
+	padding-left: .25em;
+	padding-right: .5em;
+	text-underline-position: from-font;
+	text-underline-offset: 0;
+	text-decoration-thickness: 1px;
+}
+.postlist-item-active .postlist-link {
+	font-weight: bold;
+}
+
+/* Tags */
+.post-tag {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	text-transform: capitalize;
+	font-style: italic;
+}
+.postlist-item > .post-tag {
+	align-self: center;
+}
+
+/* Tags list */
+.post-metadata {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: .5em;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+.post-metadata time {
+	margin-right: 1em;
+}
+/**
+ * okaidia theme for JavaScript, CSS and HTML
+ * Loosely based on Monokai textmate theme by http://www.monokai.nl/
+ * @author ocodia
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: #f8f8f2;
+	background: none;
+	text-shadow: 0 1px rgba(0, 0, 0, 0.3);
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	font-size: 1em;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+	line-height: 1.5;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+	border-radius: 0.3em;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	background: #272822;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	border-radius: .3em;
+	white-space: normal;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: #8292a2;
+}
+
+.token.punctuation {
+	color: #f8f8f2;
+}
+
+.token.namespace {
+	opacity: .7;
+}
+
+.token.property,
+.token.tag,
+.token.constant,
+.token.symbol,
+.token.deleted {
+	color: #f92672;
+}
+
+.token.boolean,
+.token.number {
+	color: #ae81ff;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+	color: #a6e22e;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string,
+.token.variable {
+	color: #f8f8f2;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.function,
+.token.class-name {
+	color: #e6db74;
+}
+
+.token.keyword {
+	color: #66d9ef;
+}
+
+.token.regex,
+.token.important {
+	color: #fd971f;
+}
+
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
+}
+
+.token.entity {
+	cursor: help;
+}
+/*
+ * New diff- syntax
+ */
+
+pre[class*="language-diff-"] {
+	--eleventy-code-padding: 1.25em;
+	padding-left: var(--eleventy-code-padding);
+	padding-right: var(--eleventy-code-padding);
+}
+.token.deleted {
+	background-color: hsl(0, 51%, 37%);
+	color: inherit;
+}
+.token.inserted {
+	background-color: hsl(126, 31%, 39%);
+	color: inherit;
+}
+
+/* Make the + and - characters unselectable for copy/paste */
+.token.prefix.unchanged,
+.token.prefix.inserted,
+.token.prefix.deleted {
+	-webkit-user-select: none;
+	user-select: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+.token.prefix.inserted,
+.token.prefix.deleted {
+	width: var(--eleventy-code-padding);
+	background-color: rgba(0,0,0,.2);
+}
+
+/* Optional: full-width background color */
+.token.inserted:not(.prefix),
+.token.deleted:not(.prefix) {
+	display: block;
+	margin-left: calc(-1 * var(--eleventy-code-padding));
+	margin-right: calc(-1 * var(--eleventy-code-padding));
+	text-decoration: none; /* override del, ins, mark defaults */
+	color: inherit; /* override del, ins, mark defaults */
+}</style>
+		
+	</head>
+	<body>
+		<a href="#main-content" id="skip-link" class="skip-link">Skip to main content</a>
+
+		<header role="banner">
+			<a href="/" class="home-link">Jay Singh</a>
+			<nav aria-label="Main navigation">
+				<h2 class="visually-hidden" id="top-level-navigation-menu">Top level navigation menu</h2>
+				<ul class="nav">
+					<li class="nav-item"><a href="/">Home</a></li>
+					<li class="nav-item"><a href="/feed/feed.xml">Feed</a></li>
+				</ul>
+			</nav>
+		</header>
+
+		<main id="main-content" tabindex="-1">
+			<heading-anchors>
+				
+
+
+<h1 id="ci-cd-best-practices-with-github-actions">CI/CD BEST PRACTICES WITH GITHUB ACTIONS</h1>
+
+<ul class="post-metadata">
+	<li><time datetime="2024-07-18">18 July 2024</time></li>
+	<li><a href="/tags/cicd/" class="post-tag">cicd</a>, </li>
+	<li><a href="/tags/github-actions/" class="post-tag">github-actions</a>, </li>
+	<li><a href="/tags/devops/" class="post-tag">devops</a>, </li>
+	<li><a href="/tags/automation/" class="post-tag">automation</a></li>
+</ul>
+
+<p>Continuous Integration and Continuous Deployment enable shipping features faster while maintaining quality. Here's how we built CI/CD pipelines that reduced deployment time from hours to minutes while serving 5,000+ users.</p>
+<h2 id="why-github-actions">Why GitHub Actions?</h2>
+<p>GitHub Actions provides powerful workflow automation directly integrated with your repository. Native integration means no external configuration, and the marketplace offers thousands of pre-built actions.</p>
+<pre class="language-mermaid" tabindex="0"><code class="language-mermaid"><span class="token keyword">graph</span> LR
+    A<span class="token text string">[Push Code]</span> <span class="token arrow operator">--></span> B<span class="token text string">[GitHub Actions]</span>
+    B <span class="token arrow operator">--></span> C<span class="token text string">[Run Tests]</span>
+    B <span class="token arrow operator">--></span> D<span class="token text string">[Type Checking]</span>
+    B <span class="token arrow operator">--></span> E<span class="token text string">[Security Scan]</span>
+    C <span class="token arrow operator">--></span> F<span class="token text string">{All Pass?}</span>
+    D <span class="token arrow operator">--></span> F
+    E <span class="token arrow operator">--></span> F
+    F <span class="token arrow operator">--></span><span class="token label property">|Yes|</span> G<span class="token text string">[Build Container]</span>
+    G <span class="token arrow operator">--></span> H<span class="token text string">[Push to Registry]</span>
+    H <span class="token arrow operator">--></span> I<span class="token text string">[Deploy]</span>
+    I <span class="token arrow operator">--></span> J<span class="token text string">[Health Check]</span>
+    J <span class="token arrow operator">--></span><span class="token label property">|Fail|</span> K<span class="token text string">[Rollback]</span>
+    J <span class="token arrow operator">--></span><span class="token label property">|Pass|</span> L<span class="token text string">[Complete]</span>
+    F <span class="token arrow operator">--></span><span class="token label property">|No|</span> M<span class="token text string">[Fail Build]</span></code></pre>
+<h2 id="automated-testing-pipeline">Automated Testing Pipeline</h2>
+<p>Quality gates are essential. Your CI pipeline should catch issues before they reach production.</p>
+<pre class="language-yaml" tabindex="0"><code class="language-yaml"><span class="token key atrule">name</span><span class="token punctuation">:</span> Test
+
+<span class="token key atrule">on</span><span class="token punctuation">:</span>
+  <span class="token key atrule">push</span><span class="token punctuation">:</span>
+    <span class="token key atrule">branches</span><span class="token punctuation">:</span> <span class="token punctuation">[</span>main<span class="token punctuation">,</span> develop<span class="token punctuation">]</span>
+  <span class="token key atrule">pull_request</span><span class="token punctuation">:</span>
+    <span class="token key atrule">branches</span><span class="token punctuation">:</span> <span class="token punctuation">[</span>main<span class="token punctuation">]</span>
+
+<span class="token key atrule">jobs</span><span class="token punctuation">:</span>
+  <span class="token key atrule">test</span><span class="token punctuation">:</span>
+    <span class="token key atrule">runs-on</span><span class="token punctuation">:</span> ubuntu<span class="token punctuation">-</span>latest
+    <span class="token key atrule">strategy</span><span class="token punctuation">:</span>
+      <span class="token key atrule">matrix</span><span class="token punctuation">:</span>
+        <span class="token key atrule">python-version</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">'3.10'</span><span class="token punctuation">,</span> <span class="token string">'3.11'</span><span class="token punctuation">,</span> <span class="token string">'3.12'</span><span class="token punctuation">]</span>
+
+    <span class="token key atrule">steps</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">uses</span><span class="token punctuation">:</span> actions/checkout@v4
+
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Set up Python
+        <span class="token key atrule">uses</span><span class="token punctuation">:</span> actions/setup<span class="token punctuation">-</span>python@v5
+        <span class="token key atrule">with</span><span class="token punctuation">:</span>
+          <span class="token key atrule">python-version</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> matrix.python<span class="token punctuation">-</span>version <span class="token punctuation">}</span><span class="token punctuation">}</span>
+          <span class="token key atrule">cache</span><span class="token punctuation">:</span> <span class="token string">'pip'</span>
+
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Install dependencies
+        <span class="token key atrule">run</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
+          pip install -r requirements.txt
+          pip install pytest pytest-cov mypy black ruff pip-audit</span>
+
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Run type checking
+        <span class="token key atrule">run</span><span class="token punctuation">:</span> mypy src/
+
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Check formatting
+        <span class="token key atrule">run</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
+          black --check src/
+          ruff check src/</span>
+
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Run security audit
+        <span class="token key atrule">run</span><span class="token punctuation">:</span> pip<span class="token punctuation">-</span>audit
+
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Run tests with coverage
+        <span class="token key atrule">run</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
+          pytest tests/ \
+            --cov=src \
+            --cov-report=xml \
+            --cov-report=term \
+            --cov-fail-under=80</span>
+
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Upload coverage
+        <span class="token key atrule">uses</span><span class="token punctuation">:</span> codecov/codecov<span class="token punctuation">-</span>action@v3
+        <span class="token key atrule">with</span><span class="token punctuation">:</span>
+          <span class="token key atrule">file</span><span class="token punctuation">:</span> ./coverage.xml</code></pre>
+<blockquote>
+<p><strong>Tip:</strong> Use matrix builds to test across multiple Python versions. Catch compatibility issues before your users do.</p>
+</blockquote>
+<h2 id="optimized-container-builds">Optimized Container Builds</h2>
+<p>Multi-stage Docker builds minimize image size and improve security. Layer caching makes rebuilds fast.</p>
+<pre class="language-dockerfile" tabindex="0"><code class="language-dockerfile"><span class="token instruction"><span class="token keyword">FROM</span> python:3.11-slim <span class="token keyword">as</span> builder</span>
+
+<span class="token instruction"><span class="token keyword">WORKDIR</span> /app</span>
+
+<span class="token instruction"><span class="token keyword">COPY</span> requirements.txt .</span>
+<span class="token instruction"><span class="token keyword">RUN</span> pip install --user --no-cache-dir -r requirements.txt</span>
+
+<span class="token instruction"><span class="token keyword">FROM</span> python:3.11-slim</span>
+
+<span class="token instruction"><span class="token keyword">WORKDIR</span> /app</span>
+
+<span class="token instruction"><span class="token keyword">COPY</span> <span class="token options"><span class="token property">--from</span><span class="token punctuation">=</span><span class="token string">builder</span></span> /root/.local /root/.local</span>
+<span class="token instruction"><span class="token keyword">COPY</span> src/ ./src/</span>
+
+<span class="token instruction"><span class="token keyword">RUN</span> useradd -m -u 1000 appuser &amp;&amp; chown -R appuser:appuser /app</span>
+<span class="token instruction"><span class="token keyword">USER</span> appuser</span>
+
+<span class="token instruction"><span class="token keyword">ENV</span> PATH=/root/.local/bin:<span class="token variable">$PATH</span></span>
+
+<span class="token instruction"><span class="token keyword">CMD</span> [<span class="token string">"python"</span>, <span class="token string">"-m"</span>, <span class="token string">"uvicorn"</span>, <span class="token string">"src.main:app"</span>, <span class="token string">"--host"</span>, <span class="token string">"0.0.0.0"</span>, <span class="token string">"--port"</span>, <span class="token string">"8000"</span>]</span></code></pre>
+<pre class="language-yaml" tabindex="0"><code class="language-yaml"><span class="token key atrule">name</span><span class="token punctuation">:</span> Build and Push
+
+<span class="token key atrule">on</span><span class="token punctuation">:</span>
+  <span class="token key atrule">push</span><span class="token punctuation">:</span>
+    <span class="token key atrule">branches</span><span class="token punctuation">:</span> <span class="token punctuation">[</span>main<span class="token punctuation">]</span>
+    <span class="token key atrule">tags</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">'v*'</span><span class="token punctuation">]</span>
+
+<span class="token key atrule">jobs</span><span class="token punctuation">:</span>
+  <span class="token key atrule">build</span><span class="token punctuation">:</span>
+    <span class="token key atrule">runs-on</span><span class="token punctuation">:</span> ubuntu<span class="token punctuation">-</span>latest
+    <span class="token key atrule">permissions</span><span class="token punctuation">:</span>
+      <span class="token key atrule">contents</span><span class="token punctuation">:</span> read
+      <span class="token key atrule">packages</span><span class="token punctuation">:</span> write
+
+    <span class="token key atrule">steps</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">uses</span><span class="token punctuation">:</span> actions/checkout@v4
+
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Set up Docker Buildx
+        <span class="token key atrule">uses</span><span class="token punctuation">:</span> docker/setup<span class="token punctuation">-</span>buildx<span class="token punctuation">-</span>action@v3
+
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Log in to Registry
+        <span class="token key atrule">uses</span><span class="token punctuation">:</span> docker/login<span class="token punctuation">-</span>action@v3
+        <span class="token key atrule">with</span><span class="token punctuation">:</span>
+          <span class="token key atrule">registry</span><span class="token punctuation">:</span> ghcr.io
+          <span class="token key atrule">username</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> github.actor <span class="token punctuation">}</span><span class="token punctuation">}</span>
+          <span class="token key atrule">password</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> secrets.GITHUB_TOKEN <span class="token punctuation">}</span><span class="token punctuation">}</span>
+
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Extract metadata
+        <span class="token key atrule">id</span><span class="token punctuation">:</span> meta
+        <span class="token key atrule">uses</span><span class="token punctuation">:</span> docker/metadata<span class="token punctuation">-</span>action@v5
+        <span class="token key atrule">with</span><span class="token punctuation">:</span>
+          <span class="token key atrule">images</span><span class="token punctuation">:</span> ghcr.io/$<span class="token punctuation">{</span><span class="token punctuation">{</span> github.repository <span class="token punctuation">}</span><span class="token punctuation">}</span>
+          <span class="token key atrule">tags</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha,prefix={{branch}}-</span>
+
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Build and push
+        <span class="token key atrule">uses</span><span class="token punctuation">:</span> docker/build<span class="token punctuation">-</span>push<span class="token punctuation">-</span>action@v5
+        <span class="token key atrule">with</span><span class="token punctuation">:</span>
+          <span class="token key atrule">context</span><span class="token punctuation">:</span> .
+          <span class="token key atrule">push</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
+          <span class="token key atrule">tags</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> steps.meta.outputs.tags <span class="token punctuation">}</span><span class="token punctuation">}</span>
+          <span class="token key atrule">labels</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> steps.meta.outputs.labels <span class="token punctuation">}</span><span class="token punctuation">}</span>
+          <span class="token key atrule">cache-from</span><span class="token punctuation">:</span> type=gha
+          <span class="token key atrule">cache-to</span><span class="token punctuation">:</span> type=gha<span class="token punctuation">,</span>mode=max
+
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Scan image
+        <span class="token key atrule">uses</span><span class="token punctuation">:</span> aquasecurity/trivy<span class="token punctuation">-</span>action@master
+        <span class="token key atrule">with</span><span class="token punctuation">:</span>
+          <span class="token key atrule">image-ref</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> steps.meta.outputs.tags <span class="token punctuation">}</span><span class="token punctuation">}</span>
+          <span class="token key atrule">format</span><span class="token punctuation">:</span> <span class="token string">'sarif'</span>
+          <span class="token key atrule">output</span><span class="token punctuation">:</span> <span class="token string">'trivy-results.sarif'</span>
+
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Upload scan results
+        <span class="token key atrule">uses</span><span class="token punctuation">:</span> github/codeql<span class="token punctuation">-</span>action/upload<span class="token punctuation">-</span>sarif@v2
+        <span class="token key atrule">with</span><span class="token punctuation">:</span>
+          <span class="token key atrule">sarif_file</span><span class="token punctuation">:</span> <span class="token string">'trivy-results.sarif'</span></code></pre>
+<blockquote>
+<p><strong>Warning:</strong> Never use 'latest' tag in production. Always use specific versions or commit SHAs for reproducibility.</p>
+</blockquote>
+<h2 id="zero-downtime-deployment">Zero-Downtime Deployment</h2>
+<p>Rolling deployments ensure users never experience downtime. Health checks validate each instance before routing traffic.</p>
+<pre class="language-yaml" tabindex="0"><code class="language-yaml"><span class="token key atrule">name</span><span class="token punctuation">:</span> Deploy
+
+<span class="token key atrule">on</span><span class="token punctuation">:</span>
+  <span class="token key atrule">workflow_run</span><span class="token punctuation">:</span>
+    <span class="token key atrule">workflows</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">"Build and Push"</span><span class="token punctuation">]</span>
+    <span class="token key atrule">types</span><span class="token punctuation">:</span> <span class="token punctuation">[</span>completed<span class="token punctuation">]</span>
+    <span class="token key atrule">branches</span><span class="token punctuation">:</span> <span class="token punctuation">[</span>main<span class="token punctuation">]</span>
+
+<span class="token key atrule">jobs</span><span class="token punctuation">:</span>
+  <span class="token key atrule">deploy</span><span class="token punctuation">:</span>
+    <span class="token key atrule">runs-on</span><span class="token punctuation">:</span> ubuntu<span class="token punctuation">-</span>latest
+    <span class="token key atrule">if</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> github.event.workflow_run.conclusion == 'success' <span class="token punctuation">}</span><span class="token punctuation">}</span>
+
+    <span class="token key atrule">steps</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">uses</span><span class="token punctuation">:</span> actions/checkout@v4
+
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Run database migrations
+        <span class="token key atrule">run</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
+          docker run --rm \
+            --network=production \
+            -e DATABASE_URL=${{ secrets.DATABASE_URL }} \
+            ghcr.io/${{ github.repository }}:${{ github.sha }} \
+            alembic upgrade head</span>
+
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Deploy with rolling update
+        <span class="token key atrule">run</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
+          docker service update \
+            --image ghcr.io/${{ github.repository }}:${{ github.sha }} \
+            --update-parallelism 1 \
+            --update-delay 30s \
+            --update-order start-first \
+            --health-cmd "curl -f http://localhost:8000/health || exit 1" \
+            --health-interval 10s \
+            --health-retries 3 \
+            production_api</span>
+
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Wait for rollout
+        <span class="token key atrule">run</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
+          timeout 300 bash -c 'until [ "$(docker service ps production_api --filter desired-state=running -q | wc -l)" -eq "3" ]; do sleep 5; done'</span>
+
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Verify deployment
+        <span class="token key atrule">run</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
+          response=$(curl -f -s -o /dev/null -w "%{http_code}" https://api.example.com/health)
+          if [ $response -ne 200 ]; then
+            echo "Health check failed with status $response"
+            docker service rollback production_api
+            exit 1
+          fi</span>
+
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Notify on failure
+        <span class="token key atrule">if</span><span class="token punctuation">:</span> failure()
+        <span class="token key atrule">uses</span><span class="token punctuation">:</span> slackapi/slack<span class="token punctuation">-</span>github<span class="token punctuation">-</span>action@v1
+        <span class="token key atrule">with</span><span class="token punctuation">:</span>
+          <span class="token key atrule">webhook-url</span><span class="token punctuation">:</span> $<span class="token punctuation">{</span><span class="token punctuation">{</span> secrets.SLACK_WEBHOOK <span class="token punctuation">}</span><span class="token punctuation">}</span>
+          <span class="token key atrule">payload</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
+            {
+              "text": "Deployment failed for ${{ github.repository }}",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Deployment Failed* :x:\nRepository: ${{ github.repository }}\nCommit: ${{ github.sha }}"
+                  }
+                }
+              ]
+            }</span></code></pre>
+<h2 id="database-migrations">Database Migrations</h2>
+<p>Always run migrations before deploying new code. Use Alembic for safe, versioned database changes.</p>
+<pre class="language-python" tabindex="0"><code class="language-python"><span class="token keyword">from</span> alembic <span class="token keyword">import</span> op
+<span class="token keyword">import</span> sqlalchemy <span class="token keyword">as</span> sa
+
+<span class="token keyword">def</span> <span class="token function">upgrade</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    op<span class="token punctuation">.</span>add_column<span class="token punctuation">(</span>
+        <span class="token string">'scans'</span><span class="token punctuation">,</span>
+        sa<span class="token punctuation">.</span>Column<span class="token punctuation">(</span><span class="token string">'status'</span><span class="token punctuation">,</span> sa<span class="token punctuation">.</span>String<span class="token punctuation">(</span><span class="token number">50</span><span class="token punctuation">)</span><span class="token punctuation">,</span> nullable<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">)</span>
+    <span class="token punctuation">)</span>
+
+    op<span class="token punctuation">.</span>execute<span class="token punctuation">(</span>
+        <span class="token string">"UPDATE scans SET status = 'completed' WHERE status IS NULL"</span>
+    <span class="token punctuation">)</span>
+
+    op<span class="token punctuation">.</span>alter_column<span class="token punctuation">(</span><span class="token string">'scans'</span><span class="token punctuation">,</span> <span class="token string">'status'</span><span class="token punctuation">,</span> nullable<span class="token operator">=</span><span class="token boolean">False</span><span class="token punctuation">)</span>
+
+    op<span class="token punctuation">.</span>create_index<span class="token punctuation">(</span>
+        <span class="token string">'idx_scans_status'</span><span class="token punctuation">,</span>
+        <span class="token string">'scans'</span><span class="token punctuation">,</span>
+        <span class="token punctuation">[</span><span class="token string">'status'</span><span class="token punctuation">]</span>
+    <span class="token punctuation">)</span>
+
+<span class="token keyword">def</span> <span class="token function">downgrade</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    op<span class="token punctuation">.</span>drop_index<span class="token punctuation">(</span><span class="token string">'idx_scans_status'</span><span class="token punctuation">,</span> table_name<span class="token operator">=</span><span class="token string">'scans'</span><span class="token punctuation">)</span>
+    op<span class="token punctuation">.</span>drop_column<span class="token punctuation">(</span><span class="token string">'scans'</span><span class="token punctuation">,</span> <span class="token string">'status'</span><span class="token punctuation">)</span></code></pre>
+<blockquote>
+<p><strong>Important:</strong> Always write reversible migrations. You should be able to roll back any change without data loss.</p>
+</blockquote>
+<h2 id="monitoring-and-observability">Monitoring and Observability</h2>
+<p>Track deployment metrics to understand pipeline health and identify bottlenecks.</p>
+<pre class="language-yaml" tabindex="0"><code class="language-yaml"><span class="token key atrule">name</span><span class="token punctuation">:</span> Deployment Metrics
+
+<span class="token key atrule">on</span><span class="token punctuation">:</span>
+  <span class="token key atrule">workflow_run</span><span class="token punctuation">:</span>
+    <span class="token key atrule">workflows</span><span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token string">"Deploy"</span><span class="token punctuation">]</span>
+    <span class="token key atrule">types</span><span class="token punctuation">:</span> <span class="token punctuation">[</span>completed<span class="token punctuation">]</span>
+
+<span class="token key atrule">jobs</span><span class="token punctuation">:</span>
+  <span class="token key atrule">metrics</span><span class="token punctuation">:</span>
+    <span class="token key atrule">runs-on</span><span class="token punctuation">:</span> ubuntu<span class="token punctuation">-</span>latest
+    <span class="token key atrule">steps</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Record deployment metrics
+        <span class="token key atrule">run</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
+          curl -X POST https://api.example.com/metrics \
+            -H "Content-Type: application/json" \
+            -d '{
+              "metric": "deployment.completed",
+              "value": 1,
+              "tags": {
+                "status": "${{ github.event.workflow_run.conclusion }}",
+                "branch": "${{ github.ref_name }}",
+                "duration": "${{ github.event.workflow_run.duration }}"
+              }
+            }'</span>
+
+      <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Check error rate
+        <span class="token key atrule">run</span><span class="token punctuation">:</span> <span class="token punctuation">|</span><span class="token scalar string">
+          error_rate=$(curl -s https://api.example.com/metrics/errors | jq '.rate')
+          if (( $(echo "$error_rate > 0.05" | bc -l) )); then
+            echo "Error rate too high: $error_rate"
+            curl -X POST https://api.example.com/rollback \
+              -H "Authorization: Bearer ${{ secrets.API_TOKEN }}"
+            exit 1
+          fi</span></code></pre>
+<h2 id="real-world-results">Real-World Results</h2>
+<p>Our CI/CD pipeline enables multiple deployments per day with confidence. Automated testing catches 95% of bugs before code review. Zero-downtime deployments ensure 5,000+ users never experience service interruptions.</p>
+<blockquote>
+<p><strong>Tip:</strong> We reduced deployment time from 2 hours of manual work to 8 minutes of automated deployment. The ROI on CI/CD automation is immediate.</p>
+</blockquote>
+<p>Key principle: automate everything, but make it easy to override when needed. The best pipelines are reliable, fast, and transparent. Developers should trust the pipeline and understand what it does at every step.</p>
+<blockquote>
+<p><strong>Important:</strong> Start simple and iterate. A basic CI/CD pipeline that works is better than a complex one that's always breaking.</p>
+</blockquote>
+
+<ul class="links-nextprev"><li class="links-nextprev-next">Next →<br><a href="/blog/postgresql-performance/">POSTGRESQL PERFORMANCE OPTIMIZATION FOR HIGH-TRAFFIC APPLICATIONS</a></li>
+</ul>
+
+			</heading-anchors>
+		</main>
+
+		<footer role="contentinfo">
+			<p>
+				<em>Built with <a href="https://www.11ty.dev/">Eleventy v3.1.2</a></em>
+			</p>
+		</footer>
+
+		<!-- This page `/blog/ci-cd-best-practices/` was built on 2026-01-29T15:21:09.640Z -->
+		<script type="module" src="/dist/cC8wS6ZjFU.js"></script>
+	</body>
+</html>

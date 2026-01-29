@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>POSTGRESQL PERFORMANCE OPTIMIZATION FOR HIGH-TRAFFIC APPLICATIONS</title>
+		<meta name="description" content="Jay Singh&#39;s portfolio - Software Engineer">
+		<link rel="alternate" href="/feed/feed.xml" type="application/atom+xml" title="Jay Singh">
+		
+		
+		<link rel="stylesheet" href="/css/main.css">
+		
+		<style>/* This is an arbitrary CSS string added to the bundle */
+/* Defaults */
+:root {
+	--font-family: -apple-system, system-ui, sans-serif;
+	--font-family-monospace: Consolas, Menlo, Monaco, Andale Mono WT, Andale Mono, Lucida Console, Lucida Sans Typewriter, DejaVu Sans Mono, Bitstream Vera Sans Mono, Liberation Mono, Nimbus Mono L, Courier New, Courier, monospace;
+}
+
+/* Theme colors */
+:root {
+	--color-gray-20: #e0e0e0;
+	--color-gray-50: #C0C0C0;
+	--color-gray-90: #333;
+
+	--background-color: #fff;
+
+	--text-color: var(--color-gray-90);
+	--text-color-link: #082840;
+	--text-color-link-active: #5f2b48;
+	--text-color-link-visited: #17050F;
+
+	--syntax-tab-size: 2;
+}
+
+/* Dark mode removed - brutalist design uses cream-based light theme only */
+
+/* Global stylesheet */
+* {
+	box-sizing: border-box;
+}
+
+@view-transition {
+	navigation: auto;
+}
+
+html,
+body {
+	padding: 0;
+	margin: 0 auto;
+	font-family: var(--font-family);
+	color: var(--text-color);
+	background-color: var(--background-color);
+}
+html {
+	overflow-y: scroll;
+}
+body {
+	max-width: 40em;
+}
+
+/* https://www.a11yproject.com/posts/how-to-hide-content/ */
+.visually-hidden:not(:focus):not(:active) {
+	clip: rect(0 0 0 0);
+	clip-path: inset(50%);
+	height: 1px;
+	overflow: hidden;
+	position: absolute;
+	white-space: nowrap;
+	width: 1px;
+}
+
+/* Fluid images via https://www.zachleat.com/web/fluid-images/ */
+img{
+  max-width: 100%;
+}
+img[width][height] {
+  height: auto;
+}
+img[src$=".svg"] {
+  width: 100%;
+  height: auto;
+  max-width: none;
+}
+video,
+iframe {
+	width: 100%;
+	height: auto;
+}
+iframe {
+	aspect-ratio: 16/9;
+}
+
+p:last-child {
+	margin-bottom: 0;
+}
+p {
+	line-height: 1.5;
+}
+
+li {
+	line-height: 1.5;
+}
+
+a[href] {
+	color: var(--text-color-link);
+}
+a[href]:visited {
+	color: var(--text-color-link-visited);
+}
+a[href]:hover,
+a[href]:active {
+	color: var(--text-color-link-active);
+}
+
+main,
+footer {
+	padding: 1rem;
+}
+main :first-child {
+	margin-top: 0;
+}
+
+header {
+	border-bottom: 1px dashed var(--color-gray-20);
+}
+
+/* Skip link styling moved to main.css using Tailwind utilities (.skip-link class) */
+
+.links-nextprev {
+	display: flex;
+	justify-content: space-between;
+	gap: .5em 1em;
+	list-style: "";
+	border-top: 1px dashed var(--color-gray-20);
+	padding: 1em 0;
+}
+.links-nextprev > * {
+	flex-grow: 1;
+}
+.links-nextprev-next {
+	text-align: right;
+}
+
+table {
+	margin: 1em 0;
+}
+table td,
+table th {
+	padding-right: 1em;
+}
+
+pre,
+code {
+	font-family: var(--font-family-monospace);
+}
+pre:not([class*="language-"]) {
+	margin: .5em 0;
+	line-height: 1.375; /* 22px /16 */
+	-moz-tab-size: var(--syntax-tab-size);
+	-o-tab-size: var(--syntax-tab-size);
+	tab-size: var(--syntax-tab-size);
+	-webkit-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+	direction: ltr;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	overflow-x: auto;
+}
+code {
+	word-break: break-all;
+}
+
+/* Header */
+header {
+	display: flex;
+	gap: 1em;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: center;
+	padding: 1em;
+}
+.home-link {
+	flex-grow: 1;
+	font-size: 1em; /* 16px /16 */
+	font-weight: 700;
+}
+.home-link:link:not(:hover) {
+	text-decoration: none;
+}
+
+/* Nav */
+.nav {
+	display: flex;
+	gap: .5em 1em;
+	padding: 0;
+	margin: 0;
+	list-style: none;
+}
+.nav-item {
+	display: inline-block;
+}
+.nav-item a[href]:not(:hover) {
+	text-decoration: none;
+}
+.nav a[href][aria-current="page"] {
+	text-decoration: underline;
+}
+
+/* Posts list */
+.postlist {
+	counter-reset: start-from var(--postlist-index);
+	list-style: none;
+	padding: 0;
+	padding-left: 1.5rem;
+}
+.postlist-item {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	counter-increment: start-from -1;
+	margin-bottom: 1em;
+}
+.postlist-item:before {
+	display: inline-block;
+	pointer-events: none;
+	content: "" counter(start-from, decimal-leading-zero) ". ";
+	line-height: 100%;
+	text-align: right;
+	margin-left: -1.5rem;
+}
+.postlist-date,
+.postlist-item:before {
+	font-size: 0.8125em; /* 13px /16 */
+	color: var(--color-gray-90);
+}
+.postlist-date {
+	word-spacing: -0.5px;
+}
+.postlist-link {
+	font-size: 1.1875em; /* 19px /16 */
+	font-weight: 700;
+	flex-basis: calc(100% - 1.5rem);
+	padding-left: .25em;
+	padding-right: .5em;
+	text-underline-position: from-font;
+	text-underline-offset: 0;
+	text-decoration-thickness: 1px;
+}
+.postlist-item-active .postlist-link {
+	font-weight: bold;
+}
+
+/* Tags */
+.post-tag {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	text-transform: capitalize;
+	font-style: italic;
+}
+.postlist-item > .post-tag {
+	align-self: center;
+}
+
+/* Tags list */
+.post-metadata {
+	display: inline-flex;
+	flex-wrap: wrap;
+	gap: .5em;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+.post-metadata time {
+	margin-right: 1em;
+}
+/**
+ * okaidia theme for JavaScript, CSS and HTML
+ * Loosely based on Monokai textmate theme by http://www.monokai.nl/
+ * @author ocodia
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: #f8f8f2;
+	background: none;
+	text-shadow: 0 1px rgba(0, 0, 0, 0.3);
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	font-size: 1em;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+	line-height: 1.5;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+	border-radius: 0.3em;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	background: #272822;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	border-radius: .3em;
+	white-space: normal;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: #8292a2;
+}
+
+.token.punctuation {
+	color: #f8f8f2;
+}
+
+.token.namespace {
+	opacity: .7;
+}
+
+.token.property,
+.token.tag,
+.token.constant,
+.token.symbol,
+.token.deleted {
+	color: #f92672;
+}
+
+.token.boolean,
+.token.number {
+	color: #ae81ff;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+	color: #a6e22e;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string,
+.token.variable {
+	color: #f8f8f2;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.function,
+.token.class-name {
+	color: #e6db74;
+}
+
+.token.keyword {
+	color: #66d9ef;
+}
+
+.token.regex,
+.token.important {
+	color: #fd971f;
+}
+
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
+}
+
+.token.entity {
+	cursor: help;
+}
+/*
+ * New diff- syntax
+ */
+
+pre[class*="language-diff-"] {
+	--eleventy-code-padding: 1.25em;
+	padding-left: var(--eleventy-code-padding);
+	padding-right: var(--eleventy-code-padding);
+}
+.token.deleted {
+	background-color: hsl(0, 51%, 37%);
+	color: inherit;
+}
+.token.inserted {
+	background-color: hsl(126, 31%, 39%);
+	color: inherit;
+}
+
+/* Make the + and - characters unselectable for copy/paste */
+.token.prefix.unchanged,
+.token.prefix.inserted,
+.token.prefix.deleted {
+	-webkit-user-select: none;
+	user-select: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+.token.prefix.inserted,
+.token.prefix.deleted {
+	width: var(--eleventy-code-padding);
+	background-color: rgba(0,0,0,.2);
+}
+
+/* Optional: full-width background color */
+.token.inserted:not(.prefix),
+.token.deleted:not(.prefix) {
+	display: block;
+	margin-left: calc(-1 * var(--eleventy-code-padding));
+	margin-right: calc(-1 * var(--eleventy-code-padding));
+	text-decoration: none; /* override del, ins, mark defaults */
+	color: inherit; /* override del, ins, mark defaults */
+}</style>
+		
+	</head>
+	<body>
+		<a href="#main-content" id="skip-link" class="skip-link">Skip to main content</a>
+
+		<header role="banner">
+			<a href="/" class="home-link">Jay Singh</a>
+			<nav aria-label="Main navigation">
+				<h2 class="visually-hidden" id="top-level-navigation-menu">Top level navigation menu</h2>
+				<ul class="nav">
+					<li class="nav-item"><a href="/">Home</a></li>
+					<li class="nav-item"><a href="/feed/feed.xml">Feed</a></li>
+				</ul>
+			</nav>
+		</header>
+
+		<main id="main-content" tabindex="-1">
+			<heading-anchors>
+				
+
+
+<h1 id="postgresql-performance-optimization-for-high-traffic-applications">POSTGRESQL PERFORMANCE OPTIMIZATION FOR HIGH-TRAFFIC APPLICATIONS</h1>
+
+<ul class="post-metadata">
+	<li><time datetime="2024-08-30">30 August 2024</time></li>
+	<li><a href="/tags/postgresql/" class="post-tag">postgresql</a>, </li>
+	<li><a href="/tags/database/" class="post-tag">database</a>, </li>
+	<li><a href="/tags/performance/" class="post-tag">performance</a>, </li>
+	<li><a href="/tags/backend/" class="post-tag">backend</a></li>
+</ul>
+
+<p>PostgreSQL is incredibly powerful, but it requires proper tuning for high-traffic applications. Here are the techniques we used to maintain sub-second response times while serving 5,000+ users with real-time analytics.</p>
+<h2 id="indexing-strategy">Indexing Strategy</h2>
+<p>Indexes are the foundation of database performance. Analyze your query patterns and create appropriate indexes, but understand the tradeoffs. Every index speeds up reads but slows down writes.</p>
+<pre class="language-sql" tabindex="0"><code class="language-sql"><span class="token keyword">EXPLAIN</span> <span class="token keyword">ANALYZE</span>
+<span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> scans
+<span class="token keyword">WHERE</span> user_id <span class="token operator">=</span> <span class="token number">123</span>
+<span class="token operator">AND</span> created_at <span class="token operator">></span> <span class="token function">NOW</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">-</span> <span class="token keyword">INTERVAL</span> <span class="token string">'30 days'</span><span class="token punctuation">;</span>
+
+<span class="token keyword">CREATE</span> <span class="token keyword">INDEX</span> idx_scans_user_created
+<span class="token keyword">ON</span> scans<span class="token punctuation">(</span>user_id<span class="token punctuation">,</span> created_at <span class="token keyword">DESC</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">CREATE</span> <span class="token keyword">INDEX</span> idx_active_users
+<span class="token keyword">ON</span> users<span class="token punctuation">(</span>email<span class="token punctuation">)</span>
+<span class="token keyword">WHERE</span> is_active <span class="token operator">=</span> <span class="token boolean">true</span><span class="token punctuation">;</span>
+
+<span class="token keyword">CREATE</span> <span class="token keyword">INDEX</span> idx_scans_summary
+<span class="token keyword">ON</span> scans<span class="token punctuation">(</span>user_id<span class="token punctuation">)</span>
+INCLUDE <span class="token punctuation">(</span>scan_type<span class="token punctuation">,</span> created_at<span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<blockquote>
+<p><strong>Tip:</strong> Use EXPLAIN ANALYZE, not just EXPLAIN. The actual execution plan can differ significantly from the estimated plan.</p>
+</blockquote>
+<p>Don't over-index. Each index requires storage and maintenance overhead. Focus on indexes that support your most common and critical queries. Use pg_stat_user_indexes to identify unused indexes and remove them.</p>
+<h2 id="connection-pooling">Connection Pooling</h2>
+<p>Database connections are expensive. Use a connection pool like PgBouncer to manage connections efficiently and prevent connection exhaustion under high load.</p>
+<pre class="language-python" tabindex="0"><code class="language-python"><span class="token punctuation">[</span>databases<span class="token punctuation">]</span>
+mydb <span class="token operator">=</span> host<span class="token operator">=</span>localhost port<span class="token operator">=</span><span class="token number">5432</span> dbname<span class="token operator">=</span>production
+
+<span class="token punctuation">[</span>pgbouncer<span class="token punctuation">]</span>
+pool_mode <span class="token operator">=</span> transaction
+max_client_conn <span class="token operator">=</span> <span class="token number">1000</span>
+default_pool_size <span class="token operator">=</span> <span class="token number">25</span>
+reserve_pool_size <span class="token operator">=</span> <span class="token number">5</span>
+reserve_pool_timeout <span class="token operator">=</span> <span class="token number">3</span>
+
+<span class="token keyword">from</span> sqlalchemy<span class="token punctuation">.</span>ext<span class="token punctuation">.</span>asyncio <span class="token keyword">import</span> create_async_engine
+
+engine <span class="token operator">=</span> create_async_engine<span class="token punctuation">(</span>
+    <span class="token string">'postgresql+asyncpg://user:pass@pgbouncer:6432/mydb'</span><span class="token punctuation">,</span>
+    pool_size<span class="token operator">=</span><span class="token number">20</span><span class="token punctuation">,</span>
+    max_overflow<span class="token operator">=</span><span class="token number">10</span><span class="token punctuation">,</span>
+    pool_pre_ping<span class="token operator">=</span><span class="token boolean">True</span><span class="token punctuation">,</span>
+    echo_pool<span class="token operator">=</span><span class="token boolean">True</span>
+<span class="token punctuation">)</span></code></pre>
+<p>Configure pool sizes based on your workload. Monitor connection usage with pg_stat_activity to avoid exhaustion. Use transaction pooling mode for maximum efficiency with stateless applications.</p>
+<h2 id="query-optimization">Query Optimization</h2>
+<p>Efficient queries are critical for performance. Avoid common pitfalls like N+1 queries and unindexed lookups.</p>
+<h3 id="avoiding-n-1-queries">Avoiding N+1 Queries</h3>
+<pre class="language-python" tabindex="0"><code class="language-python">users <span class="token operator">=</span> <span class="token keyword">await</span> session<span class="token punctuation">.</span>execute<span class="token punctuation">(</span>select<span class="token punctuation">(</span>User<span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token keyword">for</span> user <span class="token keyword">in</span> users<span class="token punctuation">.</span>scalars<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+    scans <span class="token operator">=</span> <span class="token keyword">await</span> session<span class="token punctuation">.</span>execute<span class="token punctuation">(</span>
+        select<span class="token punctuation">(</span>Scan<span class="token punctuation">)</span><span class="token punctuation">.</span>where<span class="token punctuation">(</span>Scan<span class="token punctuation">.</span>user_id <span class="token operator">==</span> user<span class="token punctuation">.</span><span class="token builtin">id</span><span class="token punctuation">)</span>
+    <span class="token punctuation">)</span>
+
+result <span class="token operator">=</span> <span class="token keyword">await</span> session<span class="token punctuation">.</span>execute<span class="token punctuation">(</span>
+    select<span class="token punctuation">(</span>User<span class="token punctuation">)</span>
+    <span class="token punctuation">.</span>options<span class="token punctuation">(</span>selectinload<span class="token punctuation">(</span>User<span class="token punctuation">.</span>scans<span class="token punctuation">)</span><span class="token punctuation">)</span>
+<span class="token punctuation">)</span>
+users <span class="token operator">=</span> result<span class="token punctuation">.</span>scalars<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token builtin">all</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+
+result <span class="token operator">=</span> <span class="token keyword">await</span> session<span class="token punctuation">.</span>execute<span class="token punctuation">(</span>
+    select<span class="token punctuation">(</span>User<span class="token punctuation">,</span> Scan<span class="token punctuation">)</span>
+    <span class="token punctuation">.</span>join<span class="token punctuation">(</span>Scan<span class="token punctuation">,</span> User<span class="token punctuation">.</span><span class="token builtin">id</span> <span class="token operator">==</span> Scan<span class="token punctuation">.</span>user_id<span class="token punctuation">)</span>
+<span class="token punctuation">)</span>
+
+SELECT
+    u<span class="token punctuation">.</span><span class="token operator">*</span><span class="token punctuation">,</span>
+    COUNT<span class="token punctuation">(</span>s<span class="token punctuation">.</span><span class="token builtin">id</span><span class="token punctuation">)</span> OVER <span class="token punctuation">(</span>PARTITION BY u<span class="token punctuation">.</span><span class="token builtin">id</span><span class="token punctuation">)</span> <span class="token keyword">as</span> scan_count
+FROM users u
+LEFT JOIN scans s ON u<span class="token punctuation">.</span><span class="token builtin">id</span> <span class="token operator">=</span> s<span class="token punctuation">.</span>user_id<span class="token punctuation">;</span></code></pre>
+<h3 id="pagination-and-result-limits">Pagination and Result Limits</h3>
+<pre class="language-sql" tabindex="0"><code class="language-sql"><span class="token keyword">SELECT</span> <span class="token operator">*</span> <span class="token keyword">FROM</span> scans
+<span class="token keyword">WHERE</span> <span class="token punctuation">(</span>created_at<span class="token punctuation">,</span> id<span class="token punctuation">)</span> <span class="token operator">&lt;</span> <span class="token punctuation">(</span>$<span class="token number">1</span><span class="token punctuation">,</span> $<span class="token number">2</span><span class="token punctuation">)</span>
+<span class="token keyword">ORDER</span> <span class="token keyword">BY</span> created_at <span class="token keyword">DESC</span><span class="token punctuation">,</span> id <span class="token keyword">DESC</span>
+<span class="token keyword">LIMIT</span> <span class="token number">50</span><span class="token punctuation">;</span>
+
+<span class="token keyword">CREATE</span> MATERIALIZED <span class="token keyword">VIEW</span> daily_stats <span class="token keyword">AS</span>
+<span class="token keyword">SELECT</span>
+    <span class="token keyword">DATE</span><span class="token punctuation">(</span>created_at<span class="token punctuation">)</span> <span class="token keyword">as</span> <span class="token keyword">date</span><span class="token punctuation">,</span>
+    <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span> <span class="token keyword">as</span> scan_count<span class="token punctuation">,</span>
+    <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token keyword">DISTINCT</span> user_id<span class="token punctuation">)</span> <span class="token keyword">as</span> unique_users
+<span class="token keyword">FROM</span> scans
+<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> <span class="token keyword">DATE</span><span class="token punctuation">(</span>created_at<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">CREATE</span> <span class="token keyword">INDEX</span> idx_daily_stats_date <span class="token keyword">ON</span> daily_stats<span class="token punctuation">(</span><span class="token keyword">date</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+REFRESH MATERIALIZED <span class="token keyword">VIEW</span> CONCURRENTLY daily_stats<span class="token punctuation">;</span></code></pre>
+<blockquote>
+<p><strong>Important:</strong> Materialized views are perfect for dashboards and reports. They cache expensive aggregations and can be refreshed on a schedule.</p>
+</blockquote>
+<h2 id="database-design">Database Design</h2>
+<p>Good schema design prevents performance problems before they start. Normalize for data integrity, but denormalize strategically for performance.</p>
+<pre class="language-sql" tabindex="0"><code class="language-sql"><span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> scans <span class="token punctuation">(</span>
+    id UUID <span class="token keyword">PRIMARY</span> <span class="token keyword">KEY</span> <span class="token keyword">DEFAULT</span> gen_random_uuid<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    user_id UUID <span class="token operator">NOT</span> <span class="token boolean">NULL</span> <span class="token keyword">REFERENCES</span> users<span class="token punctuation">(</span>id<span class="token punctuation">)</span><span class="token punctuation">,</span>
+    scan_type <span class="token keyword">VARCHAR</span><span class="token punctuation">(</span><span class="token number">50</span><span class="token punctuation">)</span> <span class="token operator">NOT</span> <span class="token boolean">NULL</span><span class="token punctuation">,</span>
+    metadata JSONB<span class="token punctuation">,</span>
+    created_at TIMESTAMPTZ <span class="token keyword">DEFAULT</span> <span class="token function">NOW</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+
+    <span class="token keyword">CONSTRAINT</span> valid_scan_type
+        <span class="token keyword">CHECK</span> <span class="token punctuation">(</span>scan_type <span class="token operator">IN</span> <span class="token punctuation">(</span><span class="token string">'qr'</span><span class="token punctuation">,</span> <span class="token string">'barcode'</span><span class="token punctuation">,</span> <span class="token string">'nfc'</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+    <span class="token keyword">CONSTRAINT</span> metadata_not_empty
+        <span class="token keyword">CHECK</span> <span class="token punctuation">(</span>jsonb_typeof<span class="token punctuation">(</span>metadata<span class="token punctuation">)</span> <span class="token operator">=</span> <span class="token string">'object'</span><span class="token punctuation">)</span>
+<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">CREATE</span> <span class="token keyword">INDEX</span> idx_scans_metadata
+<span class="token keyword">ON</span> scans <span class="token keyword">USING</span> GIN <span class="token punctuation">(</span>metadata<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> scans_partitioned <span class="token punctuation">(</span>
+    <span class="token operator">LIKE</span> scans INCLUDING <span class="token keyword">ALL</span>
+<span class="token punctuation">)</span> <span class="token keyword">PARTITION</span> <span class="token keyword">BY</span> RANGE <span class="token punctuation">(</span>created_at<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> scans_2024_11
+<span class="token keyword">PARTITION</span> <span class="token keyword">OF</span> scans_partitioned
+<span class="token keyword">FOR</span> <span class="token keyword">VALUES</span> <span class="token keyword">FROM</span> <span class="token punctuation">(</span><span class="token string">'2024-11-01'</span><span class="token punctuation">)</span> <span class="token keyword">TO</span> <span class="token punctuation">(</span><span class="token string">'2024-12-01'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> scans_2024_12
+<span class="token keyword">PARTITION</span> <span class="token keyword">OF</span> scans_partitioned
+<span class="token keyword">FOR</span> <span class="token keyword">VALUES</span> <span class="token keyword">FROM</span> <span class="token punctuation">(</span><span class="token string">'2024-12-01'</span><span class="token punctuation">)</span> <span class="token keyword">TO</span> <span class="token punctuation">(</span><span class="token string">'2025-01-01'</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>Partitioning is essential for tables with time-series data. Query performance improves dramatically when PostgreSQL can eliminate entire partitions from the scan.</p>
+<h2 id="monitoring-and-maintenance">Monitoring and Maintenance</h2>
+<p>Continuous monitoring prevents performance degradation. Track query performance, connection usage, and table statistics.</p>
+<pre class="language-sql" tabindex="0"><code class="language-sql"><span class="token keyword">SELECT</span>
+    query<span class="token punctuation">,</span>
+    calls<span class="token punctuation">,</span>
+    total_exec_time<span class="token punctuation">,</span>
+    mean_exec_time<span class="token punctuation">,</span>
+    max_exec_time
+<span class="token keyword">FROM</span> pg_stat_statements
+<span class="token keyword">ORDER</span> <span class="token keyword">BY</span> mean_exec_time <span class="token keyword">DESC</span>
+<span class="token keyword">LIMIT</span> <span class="token number">10</span><span class="token punctuation">;</span>
+
+<span class="token keyword">SELECT</span>
+    schemaname<span class="token punctuation">,</span>
+    tablename<span class="token punctuation">,</span>
+    indexname<span class="token punctuation">,</span>
+    idx_scan<span class="token punctuation">,</span>
+    idx_tup_read<span class="token punctuation">,</span>
+    idx_tup_fetch
+<span class="token keyword">FROM</span> pg_stat_user_indexes
+<span class="token keyword">WHERE</span> idx_scan <span class="token operator">=</span> <span class="token number">0</span>
+<span class="token keyword">ORDER</span> <span class="token keyword">BY</span> pg_size_pretty<span class="token punctuation">(</span>pg_relation_size<span class="token punctuation">(</span>indexrelid<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token keyword">DESC</span><span class="token punctuation">;</span>
+
+<span class="token keyword">SELECT</span>
+    state<span class="token punctuation">,</span>
+    <span class="token function">COUNT</span><span class="token punctuation">(</span><span class="token operator">*</span><span class="token punctuation">)</span>
+<span class="token keyword">FROM</span> pg_stat_activity
+<span class="token keyword">GROUP</span> <span class="token keyword">BY</span> state<span class="token punctuation">;</span>
+
+<span class="token keyword">SELECT</span>
+    schemaname<span class="token punctuation">,</span>
+    tablename<span class="token punctuation">,</span>
+    n_dead_tup<span class="token punctuation">,</span>
+    n_live_tup<span class="token punctuation">,</span>
+    <span class="token function">ROUND</span><span class="token punctuation">(</span>n_dead_tup <span class="token operator">*</span> <span class="token number">100.0</span> <span class="token operator">/</span> <span class="token keyword">NULLIF</span><span class="token punctuation">(</span>n_live_tup <span class="token operator">+</span> n_dead_tup<span class="token punctuation">,</span> <span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token number">2</span><span class="token punctuation">)</span> <span class="token keyword">as</span> dead_pct
+<span class="token keyword">FROM</span> pg_stat_user_tables
+<span class="token keyword">WHERE</span> n_dead_tup <span class="token operator">></span> <span class="token number">1000</span>
+<span class="token keyword">ORDER</span> <span class="token keyword">BY</span> dead_pct <span class="token keyword">DESC</span><span class="token punctuation">;</span></code></pre>
+<blockquote>
+<p><strong>Warning:</strong> Enable pg_stat_statements extension for query performance tracking. It's essential for identifying bottlenecks in production.</p>
+</blockquote>
+<p>Run VACUUM ANALYZE regularly to maintain table statistics and reclaim space. Consider autovacuum tuning for high-write workloads. Set up monitoring alerts for connection exhaustion, slow queries, and replication lag.</p>
+<h2 id="real-world-results">Real-World Results</h2>
+<p>Our analytics pipeline processes 11+ table schemas with real-time event sourcing while maintaining 99.9% uptime. Query response times average under 100ms for indexed lookups and under 2 seconds for complex aggregations.</p>
+<pre class="language-mermaid" tabindex="0"><code class="language-mermaid"><span class="token keyword">graph</span> LR
+    A<span class="token text string">[Application]</span> <span class="token arrow operator">--></span> B<span class="token text string">[PgBouncer]</span>
+    B <span class="token arrow operator">--></span> C<span class="token text string">[Primary DB]</span>
+    C <span class="token arrow operator">--></span> D<span class="token text string">[Read Replica 1]</span>
+    C <span class="token arrow operator">--></span> E<span class="token text string">[Read Replica 2]</span>
+    A <span class="token arrow operator">--></span> D
+    A <span class="token arrow operator">--></span> E
+    F<span class="token text string">[Analytics]</span> <span class="token arrow operator">--></span> E
+    G<span class="token text string">[Prometheus]</span> <span class="token arrow operator">--></span> C
+    G <span class="token arrow operator">--></span> D
+    G <span class="token arrow operator">--></span> E</code></pre>
+<p>Proper optimization enabled us to handle 5,000+ concurrent users with minimal hardware. The key is measuring first, optimizing second. Use the built-in PostgreSQL monitoring tools to identify bottlenecks, then apply targeted optimizations.</p>
+<blockquote>
+<p><strong>Tip:</strong> Premature optimization is the root of all evil, but measuring is not premature. Always instrument and monitor from day one.</p>
+</blockquote>
+
+<ul class="links-nextprev"><li class="links-nextprev-prev">← Previous<br> <a href="/blog/ci-cd-best-practices/">CI/CD BEST PRACTICES WITH GITHUB ACTIONS</a></li><li class="links-nextprev-next">Next →<br><a href="/blog/docker-observability/">COMPREHENSIVE OBSERVABILITY FOR DOCKER MICROSERVICES</a></li>
+</ul>
+
+			</heading-anchors>
+		</main>
+
+		<footer role="contentinfo">
+			<p>
+				<em>Built with <a href="https://www.11ty.dev/">Eleventy v3.1.2</a></em>
+			</p>
+		</footer>
+
+		<!-- This page `/blog/postgresql-performance/` was built on 2026-01-29T15:21:09.641Z -->
+		<script type="module" src="/dist/cC8wS6ZjFU.js"></script>
+	</body>
+</html>
