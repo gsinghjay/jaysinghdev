@@ -9,7 +9,12 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Brutalist Design Palette
+        // Primary: cream (backgrounds), Accents: lime (CTAs), yellow (highlights), pink (interactive)
         cream: '#FFFBEB',
+        lime: '#84CC16',
+        yellow: '#FACC15',
+        pink: '#EC4899',
       },
       fontFamily: {
         mono: ['ui-monospace', 'SFMono-Regular', 'SF Mono', 'Menlo', 'Consolas', 'Liberation Mono', 'monospace'],

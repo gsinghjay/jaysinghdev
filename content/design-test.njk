@@ -1,0 +1,72 @@
+---
+title: Design System Test
+layout: layouts/base.njk
+eleventyExcludeFromCollections: true
+permalink: /design-test/
+---
+
+<main id="main-content" tabindex="-1" class="p-8 bg-cream min-h-screen">
+  <h1 class="text-3xl font-bold mb-8 border-b-2 border-black pb-2">Brutalist Design System Test</h1>
+
+  <!-- Color Palette Test -->
+  <section class="mb-12">
+    <h2 class="text-2xl font-bold mb-4">Color Palette</h2>
+    <div class="flex gap-4 flex-wrap">
+      <div class="w-24 h-24 bg-cream border-2 border-black flex items-center justify-center">cream</div>
+      <div class="w-24 h-24 bg-lime border-2 border-black flex items-center justify-center">lime</div>
+      <div class="w-24 h-24 bg-yellow border-2 border-black flex items-center justify-center">yellow</div>
+      <div class="w-24 h-24 bg-pink border-2 border-black flex items-center justify-center text-white">pink</div>
+    </div>
+  </section>
+
+  <!-- Shadow System Test -->
+  <section class="mb-12">
+    <h2 class="text-2xl font-bold mb-4">Shadow System</h2>
+    <div class="flex gap-8 flex-wrap">
+      <div class="w-24 h-24 bg-cream border-2 border-black shadow-brutal-sm flex items-center justify-center">sm</div>
+      <div class="w-24 h-24 bg-cream border-2 border-black shadow-brutal flex items-center justify-center">brutal</div>
+      <div class="w-24 h-24 bg-cream border-2 border-black shadow-brutal-md flex items-center justify-center">md</div>
+      <div class="w-24 h-24 bg-cream border-2 border-black shadow-brutal-lg flex items-center justify-center">lg</div>
+    </div>
+  </section>
+
+  <!-- Brutal Box Components Test -->
+  <section class="mb-12">
+    <h2 class="text-2xl font-bold mb-4">Brutal Box Components</h2>
+    <div class="flex gap-4 flex-wrap">
+      <div class="brutal-box p-4">brutal-box</div>
+      <div class="brutal-box-lime p-4">brutal-box-lime</div>
+      <div class="brutal-box-yellow p-4">brutal-box-yellow</div>
+      <div class="brutal-box-pink p-4 text-white">brutal-box-pink</div>
+    </div>
+  </section>
+
+  <!-- Hover Utilities Test -->
+  <section class="mb-12">
+    <h2 class="text-2xl font-bold mb-4">Hover Utilities</h2>
+    <div class="flex gap-8 flex-wrap">
+      <button type="button" class="brutal-box p-4 hover-lift cursor-pointer">hover-lift</button>
+      <button type="button" class="brutal-box-lime p-4 hover-lift-lg cursor-pointer">hover-lift-lg</button>
+    </div>
+  </section>
+
+  <!-- Text Colors Test -->
+  <section class="mb-12">
+    <h2 class="text-2xl font-bold mb-4">Text Colors</h2>
+    <div class="flex gap-4 flex-wrap text-xl font-bold">
+      <span class="text-lime">text-lime</span>
+      <span class="text-yellow bg-black px-2">text-yellow</span>
+      <span class="text-pink">text-pink</span>
+    </div>
+  </section>
+
+  <!-- Border Colors Test -->
+  <section class="mb-12">
+    <h2 class="text-2xl font-bold mb-4">Border Colors</h2>
+    <div class="flex gap-4 flex-wrap">
+      <div class="w-24 h-24 bg-cream border-4 border-lime flex items-center justify-center">lime</div>
+      <div class="w-24 h-24 bg-cream border-4 border-yellow flex items-center justify-center">yellow</div>
+      <div class="w-24 h-24 bg-cream border-4 border-pink flex items-center justify-center">pink</div>
+    </div>
+  </section>
+</main>
