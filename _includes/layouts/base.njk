@@ -43,13 +43,13 @@
 		<script type="module">{% include "node_modules/@zachleat/heading-anchors/heading-anchors.js" %}</script>
 	</head>
 	<body>
-		<a href="#main" id="skip-link" class="skip-link">Skip to main content</a>
+		<a href="#main-content" id="skip-link" class="skip-link">Skip to main content</a>
 
 		<header role="banner">
 			<a href="/" class="home-link">{{ metadata.title }}</a>
 
 			{#- Read more about `eleventy-navigation` at https://www.11ty.dev/docs/plugins/navigation/ #}
-			<nav>
+			<nav aria-label="Main navigation">
 				<h2 class="visually-hidden">Top level navigation menu</h2>
 				<ul class="nav">
 				{%- for entry in collections.all | eleventyNavigation %}
@@ -59,7 +59,7 @@
 			</nav>
 		</header>
 
-		<main id="main" tabindex="-1">
+		<main id="main-content" tabindex="-1">
 			<heading-anchors>
 				{{ content | safe }}
 			</heading-anchors>
