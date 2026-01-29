@@ -75,7 +75,8 @@ quality_testing:
 
   lighthouse-ci:
     status: backlog
-    notes: "100% Lighthouse scores required per PRD"
+    scheduled-after: epic-2
+    notes: "Run [CI] workflow to add Lighthouse after Epic 2 completes. Epic 2 provides meaningful pages (home, about, contact, 404) to establish baseline scores. 100% Lighthouse scores required per PRD."
 
 development_status:
   # Epic 1: Project Foundation
