@@ -72,7 +72,7 @@ development_status:
   # Epic 1: Project Foundation
   epic-1: in-progress
   1-1-initialize-project-from-eleventy-base-blog-starter: done
-  1-2-add-tailwind-css-with-brutalist-design-tokens: backlog
+  1-2-add-tailwind-css-with-brutalist-design-tokens: done
   1-3-create-base-layout-with-accessibility-landmarks: backlog
   1-4-configure-github-actions-deployment: backlog
   epic-1-retrospective: optional

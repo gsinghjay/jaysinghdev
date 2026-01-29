@@ -4,7 +4,13 @@
 
 /* Brutalist Design Base Styles */
 :root {
-  --color-cream: #FFFBEB;
+  /* Brutalist Color Palette */
+  --color-cream: #FFFBEB;   /* Primary background */
+  --color-lime: #84CC16;    /* Accent, CTAs */
+  --color-yellow: #FACC15;  /* Highlights, warnings */
+  --color-pink: #EC4899;    /* Accent, interactive */
+
+  /* Brutalist Shadow System */
   --shadow-brutal-sm: 3px 3px 0 #000;
   --shadow-brutal: 4px 4px 0 #000;
   --shadow-brutal-md: 6px 6px 0 #000;
@@ -33,6 +39,32 @@ html {
 
 .brutal-shadow-hover {
   @apply transition-shadow hover:shadow-brutal-md;
+}
+
+/* Brutalist Box Components (brutal- prefix per architecture) */
+.brutal-box {
+  @apply bg-cream border-2 border-black shadow-brutal;
+}
+
+.brutal-box-lime {
+  @apply bg-lime border-2 border-black shadow-brutal;
+}
+
+.brutal-box-yellow {
+  @apply bg-yellow border-2 border-black shadow-brutal;
+}
+
+.brutal-box-pink {
+  @apply bg-pink border-2 border-black shadow-brutal;
+}
+
+/* Hover Utilities (hover- prefix per architecture) */
+.hover-lift {
+  @apply transition-all hover:shadow-brutal-md hover:-translate-y-0.5 focus:shadow-brutal-md focus:-translate-y-0.5;
+}
+
+.hover-lift-lg {
+  @apply transition-all hover:shadow-brutal-lg hover:-translate-y-1 focus:shadow-brutal-lg focus:-translate-y-1;
 }
 
 /* Accessibility: Respect reduced motion preferences */
