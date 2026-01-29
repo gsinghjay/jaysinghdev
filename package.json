@@ -1,6 +1,6 @@
 {
 	"name": "jaysinghdev",
-	"version": "1.0.0",
+	"version": "1.0.0-rc.1",
 	"description": "Jay Singh's portfolio site built with Eleventy and Tailwind CSS",
 	"type": "module",
 	"scripts": {
