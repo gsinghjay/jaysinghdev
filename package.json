@@ -11,7 +11,9 @@
 		"dev": "npm-run-all --parallel css:watch 11ty:serve",
 		"build": "npm-run-all css:build 11ty:build",
 		"preview": "eleventy --serve --port=8080",
-		"release": "semantic-release"
+		"release": "semantic-release",
+		"test": "playwright test",
+		"test:ui": "playwright test --ui"
 	},
 	"engines": {
 		"node": ">=18"
@@ -22,6 +24,8 @@
 		"@11ty/eleventy-navigation": "^1.0.4",
 		"@11ty/eleventy-plugin-rss": "^2.0.4",
 		"@11ty/eleventy-plugin-syntaxhighlight": "^5.0.2",
+		"@axe-core/playwright": "^4.11.0",
+		"@playwright/test": "^1.58.0",
 		"@semantic-release/changelog": "^6.0.3",
 		"@semantic-release/git": "^10.0.1",
 		"autoprefixer": "^10.4.21",
